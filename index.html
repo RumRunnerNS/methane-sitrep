@@ -1,0 +1,119 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#b00020"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="icon-192.png">
+<title>METHANE Sitrep</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#000;color:#fff;font:18px/1.4 system-ui,sans-serif;padding:12px 12px 80px}
+h1{font-size:22px;margin:0;color:#ff5252;text-align:center;flex:1;line-height:1.1}h1 small{display:block;color:#bbb;font-size:13px}
+.hdr{display:flex;align-items:center;gap:10px;margin:4px 0 12px;padding-bottom:10px;border-bottom:2px solid #333}
+.emb{background:#fff;border-radius:50%;width:64px;height:64px;flex:none;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #ff5252}.emb img{width:58px;height:58px;border-radius:50%}
+.ehs{height:40px;width:auto;flex:none}.rlogo{display:flex;justify-content:space-between;align-items:center;margin-top:10px}.rlogo .emb{width:44px;height:44px}.rlogo .emb img{width:40px;height:40px;border-radius:50%}.rlogo .ehs{height:26px}button,select,input,textarea{font:inherit;border-radius:10px}
+button{min-height:56px;padding:10px 14px;border:2px solid #fff;background:#222;color:#fff;font-weight:700}
+button.p{background:#b00020;border-color:#ff5252}button.on{background:#ffd600;color:#000}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.row>*{flex:1 1 140px}
+.f{border:2px solid #444;border-radius:12px;padding:10px;margin:10px 0}.f.act{border-color:#ffd600}
+.f label{display:block;font-weight:800;font-size:20px}.f label b{color:#ffd600;font-size:26px;margin-right:6px}
+.h{color:#bbb;font-size:15px;margin:2px 0 6px}
+textarea,input,select{width:100%;background:#111;color:#fff;border:2px solid #666;padding:10px;min-height:52px}
+.cas{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.cas div{text-align:center;font-weight:800}
+#live{min-height:40px;background:#111;border:1px dashed #666;padding:8px;border-radius:10px;color:#ffd600}
+pre{white-space:pre-wrap;background:#111;border:2px solid #fff;padding:10px;border-radius:10px;font-size:17px}
+.hist div{border-bottom:1px solid #444;padding:8px 0}
+</style></head><body>
+<header class="hdr"><span class="emb"><img src="epso-emblem.webp" alt="EPSO emblem"></span><h1>METHANE Sitrep<small>JESIP</small></h1><img class="ehs" src="ehs-logo.webp" alt="EHS"></header>
+<div class="row"><input id="callsign" placeholder="Callsign (e.g. Medic 1)"></div>
+<div class="row"><button id="dict" class="p">🎤 Dictate</button><button id="guided">🧭 Guided</button><button id="clear">Clear</button></div>
+<div id="live" aria-live="polite">Say e.g. “major incident declared… location… type… hazards… access… casualties… services…”</div>
+<form id="form"></form>
+<div class="row"><button class="p" id="gen">Generate report</button></div>
+<div class="rlogo" id="rlogo" hidden><span class="emb"><img src="epso-emblem.webp" alt=""></span><img class="ehs" src="ehs-logo.webp" alt=""></div><pre id="out" hidden></pre>
+<div class="row" id="acts" hidden>
+<button id="share">📤 Share</button><button id="sms">💬 SMS</button><button id="email">✉️ Email</button>
+<button id="teams">Teams</button><button id="read">🔊 Read aloud</button><button id="copy">📋 Copy</button></div>
+<h2>History</h2><div class="hist" id="hist"></div>
+<script>
+const F=[
+['M','Major incident','Declared or on standby? (any agency may declare)','major',['major incident','major']],
+['E1','Exact location','Grid ref / what3words / postcode / landmark','loc',['exact location','location','grid reference','what three words','postcode']],
+['T','Type of incident','e.g. RTC, fire, explosion, CBRN, flooding, vehicles/buildings involved','type',['type of incident','incident type','type']],
+['H','Hazards','Present and potential hazards','haz',['hazards','hazard']],
+['A','Access','Safe routes in/out, RVP, marshalling area','access',['access routes','access','rendezvous point','rvp']],
+['N','Number & type of casualties','Number, type and severity (triage)','cas',['number of casualties','casualties','number']],
+['E2','Emergency services','Present on scene and required','es',['emergency services','services present','services']]];
+const $=id=>document.getElementById(id),form=$('form');
+form.innerHTML=F.map(([k,t,h,id])=>`<div class="f" id="f_${id}"><label><b>${k[0]}</b>${t}</label><div class="h">${h}</div>`+
+(id=='major'?`<select id="major_s"><option value="">— select —</option><option>MAJOR INCIDENT DECLARED</option><option>MAJOR INCIDENT STANDBY</option><option>NOT DECLARED</option></select>`:'')+
+(id=='cas'?`<div class="cas"><div>P1<input type="number" min=0 inputmode=numeric id="p1"></div><div>P2<input type="number" min=0 inputmode=numeric id="p2"></div><div>P3<input type="number" min=0 inputmode=numeric id="p3"></div><div>Dead<input type="number" min=0 inputmode=numeric id="dead"></div></div>`:'')+
+(id=='loc'?`<div class="row"><button type="button" id="gps">📍 Use GPS</button></div>`:'')+
+`<textarea id="${id}" rows="2"></textarea></div>`).join('');
+const S='methane_draft';const ids=[...form.querySelectorAll('input,select,textarea')].map(e=>e.id).concat('callsign');
+try{const d=JSON.parse(localStorage[S]||'{}');ids.forEach(i=>{if(d[i]!=null)$(i).value=d[i]})}catch(e){}
+document.addEventListener('input',()=>{const d={};ids.forEach(i=>d[i]=$(i).value);localStorage[S]=JSON.stringify(d)});
+$('gps').onclick=()=>{if(!navigator.geolocation)return alert('No geolocation');$('gps').textContent='Locating…';
+navigator.geolocation.getCurrentPosition(p=>{const{latitude:a,longitude:o,accuracy:c}=p.coords;
+$('loc').value=($('loc').value?$('loc').value+'\n':'')+`GPS ${a.toFixed(5)}, ${o.toFixed(5)} (±${Math.round(c)}m) https://maps.google.com/?q=${a.toFixed(5)},${o.toFixed(5)}`;$('gps').textContent='📍 Use GPS';save()},
+e=>{alert('GPS failed: '+e.message);$('gps').textContent='📍 Use GPS'},{enableHighAccuracy:true,timeout:15000})};
+function save(){document.dispatchEvent(new Event('input'))}
+const NUM={zero:0,none:0,no:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,fifteen:15,twenty:20};
+function n(w){return w in NUM?NUM[w]:parseInt(w)}
+function parseCas(t){const L=t.toLowerCase(),R={p1:/(\w+)\s+(?:x\s*)?(?:p\s?1|p one|priority one|immediate|red)\b/,p2:/(\w+)\s+(?:x\s*)?(?:p\s?2|p two|priority two|urgent|yellow)\b/,p3:/(\w+)\s+(?:x\s*)?(?:p\s?3|p three|priority three|delayed|walking wounded|green)\b/,dead:/(\w+)\s+(?:dead|deceased|fatalit(?:y|ies)|p ?4)\b/};
+for(const k in R){const m=L.match(R[k]);if(m&&!isNaN(n(m[1])))$(k).value=n(m[1])}}
+function setMajor(t){const L=t.toLowerCase();if(/stand ?by/.test(L))$('major_s').value='MAJOR INCIDENT STANDBY';else if(/not|no major/.test(L))$('major_s').value='NOT DECLARED';else if(/declar|yes|major/.test(L))$('major_s').value='MAJOR INCIDENT DECLARED'}
+function route(text){// split dictation by keywords into fields
+const kws=[];F.forEach(f=>f[4].forEach(k=>kws.push([k,f[3]])));kws.sort((a,b)=>b[0].length-a[0].length);
+const re=new RegExp('\\b('+kws.map(k=>k[0]).join('|')+')\\b','gi');let m,marks=[];
+while(m=re.exec(text))marks.push([m.index,m[0].length,kws.find(k=>k[0]==m[0].toLowerCase())[1]]);
+if(!marks.length){if(cur)append(cur,text);return}
+if(marks[0][0]>0&&cur)append(cur,text.slice(0,marks[0][0]));
+marks.forEach((k,i)=>{const seg=text.slice(k[0]+(k[2]=='major'?0:k[1]),i+1<marks.length?marks[i+1][0]:text.length).replace(/^[\s,:.-]*(is|are)?\s*/i,'').trim();cur=k[2];if(seg)append(k[2],seg);else hl(k[2])});}
+let cur=null;function hl(id){document.querySelectorAll('.f').forEach(e=>e.classList.toggle('act',e.id=='f_'+id));}
+function append(id,t){t=t.trim();if(!t)return;hl(id);if(id=='major')setMajor(t);else{const el=$(id);el.value=(el.value?el.value+' ':'')+t;if(id=='cas')parseCas(el.value)}save()}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,listening=false,guided=-1,onFinal=null;
+function mkRec(){const r=new SR();r.lang='en-GB';r.continuous=true;r.interimResults=true;
+r.onresult=e=>{let it='';for(let i=e.resultIndex;i<e.results.length;i++){const x=e.results[i];if(x.isFinal){onFinal?onFinal(x[0].transcript):route(x[0].transcript)}else it+=x[0].transcript}$('live').textContent=it||'Listening…'};
+r.onerror=e=>{$('live').textContent='Mic error: '+e.error;if(e.error=='not-allowed')stop()};r.onend=()=>{if(listening)try{r.start()}catch(e){}};return r}
+function start(){if(!SR){alert('Speech recognition not supported in this browser — please type. (Use Chrome or Safari.)');return false}
+if(!rec)rec=mkRec();listening=true;try{rec.start()}catch(e){}return true}
+function stop(){listening=false;onFinal=null;guided=-1;rec&&rec.stop();$('dict').classList.remove('on');$('dict').textContent='🎤 Dictate';$('guided').classList.remove('on');$('guided').textContent='🧭 Guided';hl(null)}
+$('dict').onclick=()=>{if(listening)return stop();if(start()){$('dict').classList.add('on');$('dict').textContent='⏹ Stop'}};
+function say(t,cb){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-GB';u.rate=.85;u.onend=cb||null;speechSynthesis.speak(u)}
+function step(){if(guided>=F.length){const g=guided;stop();say('METHANE complete. Generating report.');gen();return}
+const f=F[guided];hl(f[3]);$('f_'+f[3]).scrollIntoView({behavior:'smooth',block:'center'});
+if(rec)rec.abort();listening=false;say(f[1]+'. '+f[2].replace(/e\.g\..*/,'')+'. Say next when done.',()=>{listening=true;try{rec.start()}catch(e){}})}
+$('guided').onclick=()=>{if(listening||guided>=0)return stop();if(!SR)return alert('Speech recognition not supported — type into each field.');rec=rec||mkRec();
+guided=0;$('guided').classList.add('on');$('guided').textContent='⏹ Stop guided';
+onFinal=t=>{const L=t.trim();if(/\b(next|done|skip)\s*$/i.test(L)){append(F[guided][3],L.replace(/\b(next|done|skip)\s*$/i,''));guided++;step()}else if(/^\s*(back|previous)\s*$/i.test(L)){guided=Math.max(0,guided-1);step()}else append(F[guided][3],L)};step()};
+$('clear').onclick=()=>{if(confirm('Clear all fields?')){ids.forEach(i=>{if(i!='callsign')$(i).value=''});save();$('out').hidden=$('acts').hidden=$('rlogo').hidden=true}};
+function report(){const d=new Date(),pad=x=>String(x).padStart(2,'0'),v=i=>$(i).value.trim()||'Not known';
+const c=['p1','p2','p3','dead'].map(i=>$(i).value||'0');const tot=c.slice(0,3).reduce((a,b)=>a+ +b,0);
+return `METHANE SITREP
+DTG: ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())} (local)
+FROM: ${$('callsign').value.trim()||'Unknown callsign'}
+M - MAJOR INCIDENT: ${[$('major_s').value,$('major').value.trim()].filter(Boolean).join(' - ')||'Not known'}
+E - EXACT LOCATION: ${v('loc')}
+T - TYPE OF INCIDENT: ${v('type')}
+H - HAZARDS: ${v('haz')}
+A - ACCESS: ${v('access')}
+N - NUMBER/TYPE OF CASUALTIES: P1 ${c[0]} / P2 ${c[1]} / P3 ${c[2]} / DEAD ${c[3]} (live total ${tot})${$('cas').value.trim()?'\n    '+$('cas').value.trim():''}
+E - EMERGENCY SERVICES: ${v('es')}
+END OF REPORT`}
+let last='';function gen(){last=report();$('out').textContent=last;$('out').hidden=$('acts').hidden=$('rlogo').hidden=false;
+const h=JSON.parse(localStorage.methane_hist||'[]');if(h[0]!==last){h.unshift(last);localStorage.methane_hist=JSON.stringify(h.slice(0,50))}hist();$('out').scrollIntoView({behavior:'smooth'})}
+$('gen').onclick=gen;
+function hist(){const h=JSON.parse(localStorage.methane_hist||'[]');$('hist').innerHTML=h.length?'':'<i>No saved reports</i>';
+h.forEach((r,i)=>{const d=document.createElement('div');d.innerHTML=`<b>${r.split('\n')[1]}</b> ${r.split('\n')[2]}<div class="row"><button>View</button><button>Delete</button></div>`;
+const[b1,b2]=d.querySelectorAll('button');b1.onclick=()=>{last=r;$('out').textContent=r;$('out').hidden=$('acts').hidden=$('rlogo').hidden=false;$('out').scrollIntoView()};
+b2.onclick=()=>{h.splice(i,1);localStorage.methane_hist=JSON.stringify(h);hist()};$('hist').appendChild(d)})}hist();
+const enc=encodeURIComponent;
+$('share').onclick=async()=>{if(navigator.share)try{await navigator.share({title:'METHANE Sitrep',text:last})}catch(e){}else{copy();alert('Share not supported; copied to clipboard')}};
+$('sms').onclick=()=>location.href='sms:?&body='+enc(last);
+$('email').onclick=()=>location.href='mailto:?subject='+enc('METHANE SITREP '+($('callsign').value||''))+'&body='+enc(last);
+async function copy(){try{await navigator.clipboard.writeText(last);return true}catch(e){const t=document.createElement('textarea');t.value=last;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();return true}}
+$('copy').onclick=async()=>{await copy();$('copy').textContent='✅ Copied';setTimeout(()=>$('copy').textContent='📋 Copy',1500)};
+$('teams').onclick=async()=>{await copy();alert('Report copied. Teams will open — choose a chat and paste if not pre-filled.');location.href='https://teams.microsoft.com/l/chat/0/0?users=&message='+enc(last)};
+const PH={M:'Mike',E:'Echo',T:'Tango',H:'Hotel',A:'Alpha',N:'November'};
+$('read').onclick=()=>{if(speechSynthesis.speaking){speechSynthesis.cancel();return}
+const parts=last.split('\n').map(l=>l.replace(/^([MEHTAN]) - /,(m,a)=>PH[a]+'. ').replace(/\bP([123])\b/g,'Priority $1').replace(/\//g,', ').replace(/DTG:/,'Date time group.').replace(/https?:\S+/g,'').replace(/(\d)(?=\d)/g,'$1 '));
+parts.forEach((p,i)=>{const u=new SpeechSynthesisUtterance(p+(i<parts.length-1?'. Break.':'. Out.'));u.lang='en-GB';u.rate=.8;speechSynthesis.speak(u)})};
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+</script></body></html>
