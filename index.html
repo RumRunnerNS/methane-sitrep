@@ -319,13 +319,15 @@ cl.onclick=()=>{closeSettings()};
 ex.onclick=()=>{const blob=new Blob([JSON.stringify(mergeSet(draftSet),null,2)],{type:'application/json'}),a=el('a',{href:URL.createObjectURL(blob),download:'methane-settings.json'});document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000)};
 im.onclick=()=>$('setin').click();
 rs.onclick=()=>{if(confirm('Load default settings? (Tap Save to apply.)')){draftSet=clone(DEF);renderSettings()}};
-r1.append(sv,cl);r2.append(ex,im,rs);bar.append(r1,r2);o.append(bar)}
+o.append(fbBlock());r1.append(sv,cl);r2.append(ex,im,rs);bar.append(r1,r2);o.append(bar)}
 $('setin').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const x=JSON.parse(await f.text());if(!x||typeof x!='object'||!x.sections)throw Error('Not a METHANE settings file');draftSet=mergeSet(x);renderSettings();alert('Settings loaded — review and tap Save to apply.')}catch(err){alert('Import failed: '+err.message)}};
 function openSettings(){draftSet=clone(SET);renderSettings();$('settings').hidden=false;$('settings').scrollTop=0}
 function closeSettings(){$('settings').hidden=true}
 $('gear').onclick=openSettings;
 renderChips();if(location.hash=='#settings')openSettings();else if(location.hash=='#guided')setTimeout(()=>$('guided').click(),300);
-const APPV='v10';
+const APPV='v11',FB='https://signal.group/#CjQKIFLsCHEn62HKd1--KiGSXDdz94M8Z9DSjlp5xroEIL6gEhCn0m5ijXSByL6rE2War5RU';
+function fbBlock(){const w=document.createElement('div');w.style.cssText='margin:20px 0 8px;text-align:center';const a=document.createElement('a');a.href=FB;a.target='_blank';a.rel='noopener';a.textContent='💬 Feedback / Report a bug';a.style.cssText='display:block;padding:16px;border:2px solid #ffd600;border-radius:12px;background:#222;color:#ffd600;font-weight:800;text-decoration:none;font-size:19px';const h=document.createElement('div');h.className='hint';h.textContent='Opens the EPSO pilot Signal group';w.append(a,h);return w}
+document.body.appendChild(fbBlock());
 (function(){const t=document.createElement('div');t.id='ver';t.textContent='METHANE Sitrep '+APPV;t.style.cssText='text-align:center;color:#777;font-size:13px;margin:16px 0';document.body.appendChild(t);
 const k='methane_seen_ver';if(localStorage[k]&&localStorage[k]!==APPV){const o=document.createElement('div');o.textContent='✅ Updated to '+APPV;o.style.cssText='position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#ffd600;color:#000;font-weight:800;padding:10px 18px;border-radius:24px;z-index:99';document.body.appendChild(o);setTimeout(()=>o.remove(),4000)}localStorage[k]=APPV})();
 if('serviceWorker'in navigator){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{reg.update();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')reg.update()})}).catch(()=>{});
