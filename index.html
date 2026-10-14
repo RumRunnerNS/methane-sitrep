@@ -15,7 +15,8 @@ button.p{background:#b00020;border-color:#ff5252}button.on{background:#ffd600;co
 .f label{display:block;font-weight:800;font-size:20px}.f label b{color:#ffd600;font-size:26px;margin-right:6px}
 .h{color:#bbb;font-size:15px;margin:2px 0 6px}
 textarea,input,select{width:100%;background:#111;color:#fff;border:2px solid #666;padding:10px;min-height:52px}
-.cas{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.cas div{text-align:center;font-weight:800}
+.cas{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.cas div{text-align:center;font-weight:800;border-radius:10px;padding:4px 3px;font-size:15px}.cas input{text-align:center;font-size:22px;font-weight:800;padding:6px 2px}
+.t_red{background:#d50000}.t_yellow{background:#ffd600;color:#000}.t_green{background:#00a843}.t_black{background:#000;border:2px solid #fff}.t_white{background:#fff;color:#000}.cas .t_yellow input,.cas .t_white input{background:#fff;color:#000;border-color:#000}
 #live{min-height:40px;background:#111;border:1px dashed #666;padding:8px;border-radius:10px;color:#ffd600}
 pre{white-space:pre-wrap;background:#111;border:2px solid #fff;padding:10px;border-radius:10px;font-size:17px}
 .thumbs{display:flex;flex-wrap:wrap;gap:8px}.thumbs span{position:relative}.thumbs img{width:84px;height:84px;object-fit:cover;border-radius:8px;border:2px solid #666}.thumbs button{position:absolute;top:-6px;right:-6px;min-height:32px;width:32px;padding:0;border-radius:50%;background:#b00020}
@@ -37,6 +38,7 @@ pre{white-space:pre-wrap;background:#111;border:2px solid #fff;padding:10px;bord
 <div class="hint" id="phint" hidden>📷 Photos attach only via <b>Share</b>; SMS, Email and Teams send text only.</div>
 <h2>History</h2><div class="hist" id="hist"></div>
 <script>
+const TRI=[['red','Red'],['yellow','Yellow'],['green','Green'],['black','Black'],['white','White']];
 const F=[
 ['M','Major incident','Declared or on standby? (any agency may declare)','major',['major incident','major']],
 ['E1','Exact location','Grid ref / what3words / postcode / landmark','loc',['exact location','location','grid reference','what three words','postcode']],
@@ -49,12 +51,12 @@ const F=[
 const $=id=>document.getElementById(id),form=$('form');
 form.innerHTML=F.map(([k,t,h,id])=>`<div class="f" id="f_${id}"><label><b>${k[0]}</b>${t}</label><div class="h">${h}</div>`+
 (id=='major'?`<select id="major_s"><option value="">— select —</option><option>MAJOR INCIDENT DECLARED</option><option>MAJOR INCIDENT STANDBY</option><option>NOT DECLARED</option></select>`:'')+
-(id=='cas'?`<div class="cas"><div>P1<input type="number" min=0 inputmode=numeric id="p1"></div><div>P2<input type="number" min=0 inputmode=numeric id="p2"></div><div>P3<input type="number" min=0 inputmode=numeric id="p3"></div><div>Dead<input type="number" min=0 inputmode=numeric id="dead"></div></div>`:'')+
+(id=='cas'?`<div class="cas">${TRI.map(([k,l])=>`<div class="t_${k}"><span>${l}</span><input type="number" min=0 inputmode=numeric id="${k}" aria-label="${l} count"></div>`).join('')}</div><div class="h">White = uninjured, accounted for</div>`:'')+
 (id=='sum'?`<div class="row"><button type="button" id="addupd">🕒 Add update</button></div>`:'')+(id=='loc'?`<div class="row"><button type="button" id="gps">📍 Use GPS</button></div>`:'')+
 `<textarea id="${id}" rows="2"></textarea></div>`).join('');
 document.querySelectorAll('textarea,input:not([type])').forEach(e=>{const off=e.id=='callsign'||e.id=='loc';e.spellcheck=!off;e.setAttribute('spellcheck',!off);e.setAttribute('autocorrect',off?'off':'on');e.setAttribute('autocapitalize',off?(e.id=='loc'?'none':'characters'):'sentences');e.lang='en-GB'});
 const S='methane_draft';const ids=[...form.querySelectorAll('input,select,textarea')].map(e=>e.id).concat('callsign');
-try{const d=JSON.parse(localStorage[S]||'{}');ids.forEach(i=>{if(d[i]!=null)$(i).value=d[i]})}catch(e){}
+try{const d=JSON.parse(localStorage[S]||'{}');[['p1','red'],['p2','yellow'],['p3','green'],['dead','black']].forEach(([o,k])=>{if(d[o]!=null&&d[k]==null)d[k]=d[o]});ids.forEach(i=>{if(d[i]!=null)$(i).value=d[i]})}catch(e){}
 document.addEventListener('input',()=>{const d={};ids.forEach(i=>d[i]=$(i).value);localStorage[S]=JSON.stringify(d)});
 $('gps').onclick=()=>{if(!navigator.geolocation)return alert('No geolocation');$('gps').textContent='Locating…';
 navigator.geolocation.getCurrentPosition(p=>{const{latitude:a,longitude:o,accuracy:c}=p.coords;
@@ -63,8 +65,8 @@ e=>{alert('GPS failed: '+e.message);$('gps').textContent='📍 Use GPS'},{enable
 function save(){document.dispatchEvent(new Event('input'))}
 const NUM={zero:0,none:0,no:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,fifteen:15,twenty:20};
 function n(w){return w in NUM?NUM[w]:parseInt(w)}
-function parseCas(t){const L=t.toLowerCase(),R={p1:/(\w+)\s+(?:x\s*)?(?:p\s?1|p one|priority one|immediate|red)\b/,p2:/(\w+)\s+(?:x\s*)?(?:p\s?2|p two|priority two|urgent|yellow)\b/,p3:/(\w+)\s+(?:x\s*)?(?:p\s?3|p three|priority three|delayed|walking wounded|green)\b/,dead:/(\w+)\s+(?:dead|deceased|fatalit(?:y|ies)|p ?4)\b/};
-for(const k in R){const m=L.match(R[k]);if(m&&!isNaN(n(m[1])))$(k).value=n(m[1])}}
+function parseCas(t){const L=t.toLowerCase(),R={red:'red|p ?1|p one|priority one|immediate',yellow:'yellow|p ?2|p two|priority two|urgent',green:'green|p ?3|p three|priority three|delayed|walking wounded',black:'black|dead|deceased|fatalit(?:y|ies)|p ?4',white:'white|uninjured|unhurt|accounted for'};
+for(const k in R){const re=new RegExp('(\\w+)\\s+(?:x\\s*)?(?:'+R[k]+')\\b','g');let m,v=null;while(m=re.exec(L))if(!isNaN(n(m[1])))v=n(m[1]);if(v!=null)$(k).value=v}}
 function setMajor(t){const L=t.toLowerCase();if(/stand ?by/.test(L))$('major_s').value='MAJOR INCIDENT STANDBY';else if(/not|no major/.test(L))$('major_s').value='NOT DECLARED';else if(/declar|yes|major/.test(L))$('major_s').value='MAJOR INCIDENT DECLARED'}
 function route(text){// split dictation by keywords into fields
 const kws=[];F.forEach(f=>f[4].forEach(k=>kws.push([k,f[3]])));kws.sort((a,b)=>b[0].length-a[0].length);
@@ -92,7 +94,7 @@ guided=0;$('guided').classList.add('on');$('guided').textContent='⏹ Stop guide
 onFinal=t=>{const L=t.trim();if(/\b(next|done|skip)\s*$/i.test(L)){append(F[guided][3],L.replace(/\b(next|done|skip)\s*$/i,''));guided++;step()}else if(/^\s*(back|previous)\s*$/i.test(L)){guided=Math.max(0,guided-1);step()}else append(F[guided][3],L)};step()};
 $('clear').onclick=()=>{if(confirm('Clear all fields?')){ids.forEach(i=>{if(i!='callsign')$(i).value=''});photos=[];idb('put','draft',[]).catch(()=>{});drawDraft();$('phint').hidden=true;save();$('out').hidden=$('acts').hidden=$('rlogo').hidden=true}};
 function report(){const d=new Date(),pad=x=>String(x).padStart(2,'0'),v=i=>$(i).value.trim()||'Not known';
-const c=['p1','p2','p3','dead'].map(i=>$(i).value||'0');const tot=c.slice(0,3).reduce((a,b)=>a+ +b,0);
+const c=TRI.map(([k])=>+$(k).value||0),alive=c[0]+c[1]+c[2],tot=c.reduce((a,b)=>a+b,0);
 return `METHANE SITREP
 DTG: ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())} (local)
 FROM: ${$('callsign').value.trim()||'Unknown callsign'}
@@ -101,7 +103,7 @@ E - EXACT LOCATION: ${v('loc')}
 T - TYPE OF INCIDENT: ${v('type')}
 H - HAZARDS: ${v('haz')}
 A - ACCESS: ${v('access')}
-N - NUMBER/TYPE OF CASUALTIES: P1 ${c[0]} / P2 ${c[1]} / P3 ${c[2]} / DEAD ${c[3]} (live total ${tot})${$('cas').value.trim()?'\n    '+$('cas').value.trim():''}
+N - NUMBER/TYPE OF CASUALTIES: RED ${c[0]} / YELLOW ${c[1]} / GREEN ${c[2]} / BLACK ${c[3]} / WHITE (uninjured, accounted for) ${c[4]} (injured ${alive}, total persons ${tot})${$('cas').value.trim()?'\n    '+$('cas').value.trim():''}
 E - EMERGENCY SERVICES: ${v('es')}
 SUMMARY / UPDATES: ${v('sum')}${photos.length?'\nPHOTOS: '+photos.length+' attached':''}
 END OF REPORT`}
@@ -137,7 +139,7 @@ $('copy').onclick=async()=>{await copy();$('copy').textContent='✅ Copied';setT
 $('teams').onclick=async()=>{await copy();alert('Report copied. Teams will open — choose a chat and paste if not pre-filled.');location.href='https://teams.microsoft.com/l/chat/0/0?users=&message='+enc(last)};
 const PH={M:'Mike',E:'Echo',T:'Tango',H:'Hotel',A:'Alpha',N:'November'};
 $('read').onclick=()=>{if(speechSynthesis.speaking){speechSynthesis.cancel();return}
-const parts=last.split('\n').map(l=>l.replace(/^([MEHTAN]) - /,(m,a)=>PH[a]+'. ').replace(/\bP([123])\b/g,'Priority $1').replace(/\//g,', ').replace(/^SUMMARY \/ UPDATES:/,'Summary and updates.').replace(/^PHOTOS:/,'Photos.').replace(/\[(\d\d):(\d\d)\]/g,'at $1$2 hours,').replace(/DTG:/,'Date time group.').replace(/https?:\S+/g,'').replace(/(\d)(?=\d)/g,'$1 '));
+const parts=last.split('\n').map(l=>l.replace(/^([MEHTAN]) - /,(m,a)=>PH[a]+'. ').replace(/\bP([123])\b/g,'Priority $1').replace(/\bDEAD\b/,'dead').replace(/\(injured (\d+), total persons (\d+)\)/,'. Injured $1. Total persons $2').replace(/\//g,', ').replace(/^SUMMARY \/ UPDATES:/,'Summary and updates.').replace(/^PHOTOS:/,'Photos.').replace(/\[(\d\d):(\d\d)\]/g,'at $1$2 hours,').replace(/DTG:/,'Date time group.').replace(/https?:\S+/g,'').replace(/(\d)(?=\d)/g,'$1 '));
 parts.forEach((p,i)=>{const u=new SpeechSynthesisUtterance(p+(i<parts.length-1?'. Break.':'. Out.'));u.lang='en-GB';u.rate=.8;speechSynthesis.speak(u)})};
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
 </script></body></html>
