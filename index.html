@@ -22,7 +22,7 @@ pre{white-space:pre-wrap;background:#111;border:2px solid #fff;padding:10px;bord
 .hint{color:#bbb;font-size:14px;margin:4px 0}.hist div{border-bottom:1px solid #444;padding:8px 0}
 </style></head><body>
 <header class="hdr"><span class="emb"><img src="epso-emblem.webp" alt="EPSO emblem"></span><h1>METHANE Sitrep<small>JESIP</small></h1><img class="ehs" src="ehs-logo.webp" alt="EHS"></header>
-<div class="row"><input id="callsign" placeholder="Callsign (e.g. Medic 1)"></div>
+<div class="row"><input id="callsign" spellcheck="false" autocorrect="off" autocapitalize="characters" autocomplete="off" placeholder="Callsign (e.g. Medic 1)"></div>
 <div class="row"><button id="dict" class="p">🎤 Dictate</button><button id="guided">🧭 Guided</button><button id="clear">Clear</button></div>
 <div id="live" aria-live="polite">Say e.g. “major incident declared… location… type… hazards… access… casualties… services…”</div>
 <form id="form"></form>
@@ -52,6 +52,7 @@ form.innerHTML=F.map(([k,t,h,id])=>`<div class="f" id="f_${id}"><label><b>${k[0]
 (id=='cas'?`<div class="cas"><div>P1<input type="number" min=0 inputmode=numeric id="p1"></div><div>P2<input type="number" min=0 inputmode=numeric id="p2"></div><div>P3<input type="number" min=0 inputmode=numeric id="p3"></div><div>Dead<input type="number" min=0 inputmode=numeric id="dead"></div></div>`:'')+
 (id=='sum'?`<div class="row"><button type="button" id="addupd">🕒 Add update</button></div>`:'')+(id=='loc'?`<div class="row"><button type="button" id="gps">📍 Use GPS</button></div>`:'')+
 `<textarea id="${id}" rows="2"></textarea></div>`).join('');
+document.querySelectorAll('textarea,input:not([type])').forEach(e=>{const off=e.id=='callsign'||e.id=='loc';e.spellcheck=!off;e.setAttribute('spellcheck',!off);e.setAttribute('autocorrect',off?'off':'on');e.setAttribute('autocapitalize',off?(e.id=='loc'?'none':'characters'):'sentences');e.lang='en-GB'});
 const S='methane_draft';const ids=[...form.querySelectorAll('input,select,textarea')].map(e=>e.id).concat('callsign');
 try{const d=JSON.parse(localStorage[S]||'{}');ids.forEach(i=>{if(d[i]!=null)$(i).value=d[i]})}catch(e){}
 document.addEventListener('input',()=>{const d={};ids.forEach(i=>d[i]=$(i).value);localStorage[S]=JSON.stringify(d)});
