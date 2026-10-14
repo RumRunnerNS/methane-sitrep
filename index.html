@@ -20,6 +20,7 @@ textarea,input,select{width:100%;background:#111;color:#fff;border:2px solid #66
 #live{min-height:40px;background:#111;border:1px dashed #666;padding:8px;border-radius:10px;color:#ffd600}
 pre{white-space:pre-wrap;background:#111;border:2px solid #fff;padding:10px;border-radius:10px;font-size:17px}
 .thumbs{display:flex;flex-wrap:wrap;gap:8px}.thumbs span{position:relative}.thumbs img{width:84px;height:84px;object-fit:cover;border-radius:8px;border:2px solid #666}.thumbs button{position:absolute;top:-6px;right:-6px;min-height:32px;width:32px;padding:0;border-radius:50%;background:#b00020}
+.mts{margin-top:8px;padding:8px;border:2px solid #ffd600;border-radius:10px}.mts .row{margin:4px 0 0}.mts .row>*{flex:1 1 90px}
 .hint{color:#bbb;font-size:14px;margin:4px 0}.hist div{border-bottom:1px solid #444;padding:8px 0}
 </style></head><body>
 <header class="hdr"><span class="emb"><img src="epso-emblem.webp" alt="EPSO emblem"></span><h1>METHANE Sitrep<small>JESIP</small></h1><img class="ehs" src="ehs-logo.webp" alt="EHS"></header>
@@ -50,14 +51,16 @@ const F=[
 ['+','Summary / Updates','Overall summary and time-stamped updates','sum',['summary','updates','update']]];
 const $=id=>document.getElementById(id),form=$('form');
 form.innerHTML=F.map(([k,t,h,id])=>`<div class="f" id="f_${id}"><label><b>${k[0]}</b>${t}</label><div class="h">${h}</div>`+
-(id=='major'?`<select id="major_s"><option value="">— select —</option><option>MAJOR INCIDENT DECLARED</option><option>MAJOR INCIDENT STANDBY</option><option>NOT DECLARED</option></select>`:'')+
+(id=='major'?`<select id="major_s"><option value="">— select —</option><option>MAJOR INCIDENT DECLARED</option><option>MAJOR INCIDENT STANDBY</option><option>NOT DECLARED</option></select><div id="mts" class="mts" hidden><span class="h">Declared / standby at (24h)</span><div class="row"><input type="text" id="m_time" inputmode="numeric" pattern="[0-2][0-9]:[0-5][0-9]" maxlength="5" placeholder="HH:MM" autocomplete="off" spellcheck="false" aria-label="Declaration time (24h)"><input type="date" id="m_date" aria-label="Declaration date"><button type="button" id="m_now">🕒 Now</button></div></div>`:'')+
 (id=='cas'?`<div class="cas">${TRI.map(([k,l])=>`<div class="t_${k}"><span>${l}</span><input type="number" min=0 inputmode=numeric id="${k}" aria-label="${l} count"></div>`).join('')}</div><div class="h">White = uninjured, accounted for</div>`:'')+
 (id=='sum'?`<div class="row"><button type="button" id="addupd">🕒 Add update</button></div>`:'')+(id=='loc'?`<div class="row"><button type="button" id="gps">📍 Use GPS</button></div>`:'')+
 `<textarea id="${id}" rows="2"></textarea></div>`).join('');
 document.querySelectorAll('textarea,input:not([type])').forEach(e=>{const off=e.id=='callsign'||e.id=='loc';e.spellcheck=!off;e.setAttribute('spellcheck',!off);e.setAttribute('autocorrect',off?'off':'on');e.setAttribute('autocapitalize',off?(e.id=='loc'?'none':'characters'):'sentences');e.lang='en-GB'});
 const S='methane_draft';const ids=[...form.querySelectorAll('input,select,textarea')].map(e=>e.id).concat('callsign');
 try{const d=JSON.parse(localStorage[S]||'{}');[['p1','red'],['p2','yellow'],['p3','green'],['dead','black']].forEach(([o,k])=>{if(d[o]!=null&&d[k]==null)d[k]=d[o]});ids.forEach(i=>{if(d[i]!=null)$(i).value=d[i]})}catch(e){}
+setTimeout(()=>{prevM=$('major_s').value;$('mts').hidden=!/^MAJOR INCIDENT (DECLARED|STANDBY)$/.test(prevM)});
 document.addEventListener('input',()=>{const d={};ids.forEach(i=>d[i]=$(i).value);localStorage[S]=JSON.stringify(d)});
+$('major_s').onchange=onMajor;$('m_now').onclick=()=>{stampNow();save()};
 $('gps').onclick=()=>{if(!navigator.geolocation)return alert('No geolocation');$('gps').textContent='Locating…';
 navigator.geolocation.getCurrentPosition(p=>{const{latitude:a,longitude:o,accuracy:c}=p.coords;
 $('loc').value=($('loc').value?$('loc').value+'\n':'')+`GPS ${a.toFixed(5)}, ${o.toFixed(5)} (±${Math.round(c)}m) https://maps.google.com/?q=${a.toFixed(5)},${o.toFixed(5)}`;$('gps').textContent='📍 Use GPS';save()},
@@ -67,7 +70,12 @@ const NUM={zero:0,none:0,no:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,ei
 function n(w){return w in NUM?NUM[w]:parseInt(w)}
 function parseCas(t){const L=t.toLowerCase(),R={red:'red|p ?1|p one|priority one|immediate',yellow:'yellow|p ?2|p two|priority two|urgent',green:'green|p ?3|p three|priority three|delayed|walking wounded',black:'black|dead|deceased|fatalit(?:y|ies)|p ?4',white:'white|uninjured|unhurt|accounted for'};
 for(const k in R){const re=new RegExp('(\\w+)\\s+(?:x\\s*)?(?:'+R[k]+')\\b','g');let m,v=null;while(m=re.exec(L))if(!isNaN(n(m[1])))v=n(m[1]);if(v!=null)$(k).value=v}}
-function setMajor(t){const L=t.toLowerCase();if(/stand ?by/.test(L))$('major_s').value='MAJOR INCIDENT STANDBY';else if(/not|no major/.test(L))$('major_s').value='NOT DECLARED';else if(/declar|yes|major/.test(L))$('major_s').value='MAJOR INCIDENT DECLARED'}
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function stampNow(){const d=new Date(),p=x=>String(x).padStart(2,'0');$('m_time').value=p(d.getHours())+':'+p(d.getMinutes());$('m_date').value=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())}
+let prevM=null;function onMajor(){const v=$('major_s').value,on=/DECLARED$|STANDBY$/.test(v)&&v!='NOT DECLARED';
+if(on){if(v!==prevM||!$('m_time').value)stampNow()}else{$('m_time').value='';$('m_date').value=''}$('mts').hidden=!on;prevM=v;save()}
+function declStr(){const t=$('m_time').value,d=$('m_date').value;if(!t)return'';let ds='';if(d){const[y,m,dd]=d.split('-');ds=`, ${+dd} ${MON[m-1]} ${y}`}return ` at ${t}${ds}`}
+function setMajor(t){const L=t.toLowerCase();if(/stand ?by/.test(L))$('major_s').value='MAJOR INCIDENT STANDBY';else if(/not|no major/.test(L))$('major_s').value='NOT DECLARED';else if(/declar|yes|major/.test(L))$('major_s').value='MAJOR INCIDENT DECLARED';onMajor()}
 function route(text){// split dictation by keywords into fields
 const kws=[];F.forEach(f=>f[4].forEach(k=>kws.push([k,f[3]])));kws.sort((a,b)=>b[0].length-a[0].length);
 const re=new RegExp('\\b('+kws.map(k=>k[0]).join('|')+')\\b','gi');let m,marks=[];
@@ -93,12 +101,14 @@ $('guided').onclick=()=>{if(listening||guided>=0)return stop();if(!SR)return ale
 guided=0;$('guided').classList.add('on');$('guided').textContent='⏹ Stop guided';
 onFinal=t=>{const L=t.trim();if(/\b(next|done|skip)\s*$/i.test(L)){append(F[guided][3],L.replace(/\b(next|done|skip)\s*$/i,''));guided++;step()}else if(/^\s*(back|previous)\s*$/i.test(L)){guided=Math.max(0,guided-1);step()}else append(F[guided][3],L)};step()};
 $('clear').onclick=()=>{if(confirm('Clear all fields?')){ids.forEach(i=>{if(i!='callsign')$(i).value=''});photos=[];idb('put','draft',[]).catch(()=>{});drawDraft();$('phint').hidden=true;save();$('out').hidden=$('acts').hidden=$('rlogo').hidden=true}};
+function mLine(){const v=$('major_s').value,n=$('major').value.trim(),ty=$('type').value.trim().split('\n')[0];
+let l=/^MAJOR INCIDENT (DECLARED|STANDBY)$/.test(v)?(ty?`M - ${v}: ${ty}${declStr()}`:`M - ${v}${declStr()}`):`M - MAJOR INCIDENT: ${v||'Not known'}`;return l+(n?'\n    '+n:'')}
 function report(){const d=new Date(),pad=x=>String(x).padStart(2,'0'),v=i=>$(i).value.trim()||'Not known';
 const c=TRI.map(([k])=>+$(k).value||0),alive=c[0]+c[1]+c[2],tot=c.reduce((a,b)=>a+b,0);
 return `METHANE SITREP
 DTG: ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())} (local)
 FROM: ${$('callsign').value.trim()||'Unknown callsign'}
-M - MAJOR INCIDENT: ${[$('major_s').value,$('major').value.trim()].filter(Boolean).join(' - ')||'Not known'}
+${mLine()}
 E - EXACT LOCATION: ${v('loc')}
 T - TYPE OF INCIDENT: ${v('type')}
 H - HAZARDS: ${v('haz')}
@@ -139,7 +149,7 @@ $('copy').onclick=async()=>{await copy();$('copy').textContent='✅ Copied';setT
 $('teams').onclick=async()=>{await copy();alert('Report copied. Teams will open — choose a chat and paste if not pre-filled.');location.href='https://teams.microsoft.com/l/chat/0/0?users=&message='+enc(last)};
 const PH={M:'Mike',E:'Echo',T:'Tango',H:'Hotel',A:'Alpha',N:'November'};
 $('read').onclick=()=>{if(speechSynthesis.speaking){speechSynthesis.cancel();return}
-const parts=last.split('\n').map(l=>l.replace(/^([MEHTAN]) - /,(m,a)=>PH[a]+'. ').replace(/\bP([123])\b/g,'Priority $1').replace(/\bDEAD\b/,'dead').replace(/\(injured (\d+), total persons (\d+)\)/,'. Injured $1. Total persons $2').replace(/\//g,', ').replace(/^SUMMARY \/ UPDATES:/,'Summary and updates.').replace(/^PHOTOS:/,'Photos.').replace(/\[(\d\d):(\d\d)\]/g,'at $1$2 hours,').replace(/DTG:/,'Date time group.').replace(/https?:\S+/g,'').replace(/(\d)(?=\d)/g,'$1 '));
+const parts=last.split('\n').map(l=>l.replace(/^([MEHTAN]) - /,(m,a)=>PH[a]+'. ').replace(/\bP([123])\b/g,'Priority $1').replace(/\bDEAD\b/,'dead').replace(/\(injured (\d+), total persons (\d+)\)/,'. Injured $1. Total persons $2').replace(/\//g,', ').replace(/^SUMMARY \/ UPDATES:/,'Summary and updates.').replace(/^PHOTOS:/,'Photos.').replace(/\[(\d\d):(\d\d)\]/g,'at $1$2 hours,').replace(/\bat (\d\d):(\d\d)(?=,|$)/,'at $1$2 hours').replace(/DTG:/,'Date time group.').replace(/https?:\S+/g,'').replace(/(\d)(?=\d)/g,'$1 '));
 parts.forEach((p,i)=>{const u=new SpeechSynthesisUtterance(p+(i<parts.length-1?'. Break.':'. Out.'));u.lang='en-GB';u.rate=.8;speechSynthesis.speak(u)})};
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
 </script></body></html>
