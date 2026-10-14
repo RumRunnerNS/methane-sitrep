@@ -18,18 +18,23 @@ textarea,input,select{width:100%;background:#111;color:#fff;border:2px solid #66
 .cas{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.cas div{text-align:center;font-weight:800}
 #live{min-height:40px;background:#111;border:1px dashed #666;padding:8px;border-radius:10px;color:#ffd600}
 pre{white-space:pre-wrap;background:#111;border:2px solid #fff;padding:10px;border-radius:10px;font-size:17px}
-.hist div{border-bottom:1px solid #444;padding:8px 0}
+.thumbs{display:flex;flex-wrap:wrap;gap:8px}.thumbs span{position:relative}.thumbs img{width:84px;height:84px;object-fit:cover;border-radius:8px;border:2px solid #666}.thumbs button{position:absolute;top:-6px;right:-6px;min-height:32px;width:32px;padding:0;border-radius:50%;background:#b00020}
+.hint{color:#bbb;font-size:14px;margin:4px 0}.hist div{border-bottom:1px solid #444;padding:8px 0}
 </style></head><body>
 <header class="hdr"><span class="emb"><img src="epso-emblem.webp" alt="EPSO emblem"></span><h1>METHANE Sitrep<small>JESIP</small></h1><img class="ehs" src="ehs-logo.webp" alt="EHS"></header>
 <div class="row"><input id="callsign" placeholder="Callsign (e.g. Medic 1)"></div>
 <div class="row"><button id="dict" class="p">🎤 Dictate</button><button id="guided">🧭 Guided</button><button id="clear">Clear</button></div>
 <div id="live" aria-live="polite">Say e.g. “major incident declared… location… type… hazards… access… casualties… services…”</div>
 <form id="form"></form>
+<div class="f" id="f_photos"><label><b>📷</b>Photos</label><div class="h">Camera or gallery. Stored on this device only.</div>
+<input type="file" id="photoin" accept="image/*" capture="environment" multiple hidden>
+<div class="row"><button type="button" id="addph">📷 Add photos</button></div><div class="thumbs" id="thumbs"></div></div>
 <div class="row"><button class="p" id="gen">Generate report</button></div>
 <div class="rlogo" id="rlogo" hidden><span class="emb"><img src="epso-emblem.webp" alt=""></span><img class="ehs" src="ehs-logo.webp" alt=""></div><pre id="out" hidden></pre>
 <div class="row" id="acts" hidden>
 <button id="share">📤 Share</button><button id="sms">💬 SMS</button><button id="email">✉️ Email</button>
 <button id="teams">Teams</button><button id="read">🔊 Read aloud</button><button id="copy">📋 Copy</button></div>
+<div class="hint" id="phint" hidden>📷 Photos attach only via <b>Share</b>; SMS, Email and Teams send text only.</div>
 <h2>History</h2><div class="hist" id="hist"></div>
 <script>
 const F=[
@@ -39,12 +44,13 @@ const F=[
 ['H','Hazards','Present and potential hazards','haz',['hazards','hazard']],
 ['A','Access','Safe routes in/out, RVP, marshalling area','access',['access routes','access','rendezvous point','rvp']],
 ['N','Number & type of casualties','Number, type and severity (triage)','cas',['number of casualties','casualties','number']],
-['E2','Emergency services','Present on scene and required','es',['emergency services','services present','services']]];
+['E2','Emergency services','Present on scene and required','es',['emergency services','services present','services']],
+['+','Summary / Updates','Overall summary and time-stamped updates','sum',['summary','updates','update']]];
 const $=id=>document.getElementById(id),form=$('form');
 form.innerHTML=F.map(([k,t,h,id])=>`<div class="f" id="f_${id}"><label><b>${k[0]}</b>${t}</label><div class="h">${h}</div>`+
 (id=='major'?`<select id="major_s"><option value="">— select —</option><option>MAJOR INCIDENT DECLARED</option><option>MAJOR INCIDENT STANDBY</option><option>NOT DECLARED</option></select>`:'')+
 (id=='cas'?`<div class="cas"><div>P1<input type="number" min=0 inputmode=numeric id="p1"></div><div>P2<input type="number" min=0 inputmode=numeric id="p2"></div><div>P3<input type="number" min=0 inputmode=numeric id="p3"></div><div>Dead<input type="number" min=0 inputmode=numeric id="dead"></div></div>`:'')+
-(id=='loc'?`<div class="row"><button type="button" id="gps">📍 Use GPS</button></div>`:'')+
+(id=='sum'?`<div class="row"><button type="button" id="addupd">🕒 Add update</button></div>`:'')+(id=='loc'?`<div class="row"><button type="button" id="gps">📍 Use GPS</button></div>`:'')+
 `<textarea id="${id}" rows="2"></textarea></div>`).join('');
 const S='methane_draft';const ids=[...form.querySelectorAll('input,select,textarea')].map(e=>e.id).concat('callsign');
 try{const d=JSON.parse(localStorage[S]||'{}');ids.forEach(i=>{if(d[i]!=null)$(i).value=d[i]})}catch(e){}
@@ -83,7 +89,7 @@ if(rec)rec.abort();listening=false;say(f[1]+'. '+f[2].replace(/e\.g\..*/,'')+'. 
 $('guided').onclick=()=>{if(listening||guided>=0)return stop();if(!SR)return alert('Speech recognition not supported — type into each field.');rec=rec||mkRec();
 guided=0;$('guided').classList.add('on');$('guided').textContent='⏹ Stop guided';
 onFinal=t=>{const L=t.trim();if(/\b(next|done|skip)\s*$/i.test(L)){append(F[guided][3],L.replace(/\b(next|done|skip)\s*$/i,''));guided++;step()}else if(/^\s*(back|previous)\s*$/i.test(L)){guided=Math.max(0,guided-1);step()}else append(F[guided][3],L)};step()};
-$('clear').onclick=()=>{if(confirm('Clear all fields?')){ids.forEach(i=>{if(i!='callsign')$(i).value=''});save();$('out').hidden=$('acts').hidden=$('rlogo').hidden=true}};
+$('clear').onclick=()=>{if(confirm('Clear all fields?')){ids.forEach(i=>{if(i!='callsign')$(i).value=''});photos=[];idb('put','draft',[]).catch(()=>{});drawDraft();$('phint').hidden=true;save();$('out').hidden=$('acts').hidden=$('rlogo').hidden=true}};
 function report(){const d=new Date(),pad=x=>String(x).padStart(2,'0'),v=i=>$(i).value.trim()||'Not known';
 const c=['p1','p2','p3','dead'].map(i=>$(i).value||'0');const tot=c.slice(0,3).reduce((a,b)=>a+ +b,0);
 return `METHANE SITREP
@@ -96,16 +102,33 @@ H - HAZARDS: ${v('haz')}
 A - ACCESS: ${v('access')}
 N - NUMBER/TYPE OF CASUALTIES: P1 ${c[0]} / P2 ${c[1]} / P3 ${c[2]} / DEAD ${c[3]} (live total ${tot})${$('cas').value.trim()?'\n    '+$('cas').value.trim():''}
 E - EMERGENCY SERVICES: ${v('es')}
+SUMMARY / UPDATES: ${v('sum')}${photos.length?'\nPHOTOS: '+photos.length+' attached':''}
 END OF REPORT`}
-let last='';function gen(){last=report();$('out').textContent=last;$('out').hidden=$('acts').hidden=$('rlogo').hidden=false;
-const h=JSON.parse(localStorage.methane_hist||'[]');if(h[0]!==last){h.unshift(last);localStorage.methane_hist=JSON.stringify(h.slice(0,50))}hist();$('out').scrollIntoView({behavior:'smooth'})}
+// ---- photos (IndexedDB) ----
+let photos=[],lastPhotos=[];
+const db=new Promise((ok,no)=>{const r=indexedDB.open('methane',1);r.onupgradeneeded=()=>r.result.createObjectStore('p');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)});
+async function idb(m,k,v){const d=await db;return new Promise((ok,no)=>{const t=d.transaction('p',m=='get'?'readonly':'readwrite').objectStore('p');const q=m=='get'?t.get(k):m=='del'?t.delete(k):t.put(v,k);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
+function shrink(f){return new Promise(ok=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>ok(b),'image/jpeg',.7)};im.onerror=()=>{URL.revokeObjectURL(u);ok(null)};im.src=u})}
+function thumbs(el,list,rm){el.innerHTML='';list.forEach((b,i)=>{const sp=document.createElement('span'),im=document.createElement('img');im.src=URL.createObjectURL(b);im.alt='photo '+(i+1);im.onclick=()=>window.open(im.src);sp.appendChild(im);
+if(rm){const x=document.createElement('button');x.type='button';x.textContent='✕';x.setAttribute('aria-label','Remove photo');x.onclick=()=>rm(i);sp.appendChild(x)}el.appendChild(sp)})}
+function drawDraft(){thumbs($('thumbs'),photos,i=>{photos.splice(i,1);idb('put','draft',photos);drawDraft()})}
+idb('get','draft').then(p=>{photos=p||[];drawDraft()}).catch(()=>{});
+$('addph').onclick=()=>$('photoin').click();
+$('photoin').onchange=async e=>{for(const f of e.target.files){const b=await shrink(f);if(b)photos.push(b)}e.target.value='';idb('put','draft',photos).catch(()=>{});drawDraft()};
+$('addupd').onclick=()=>{const d=new Date(),t=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'),el=$('sum');el.value=(el.value?el.value+'\n':'')+`[${t}] `;el.focus();el.setSelectionRange(el.value.length,el.value.length);save()};
+function files(list){return list.map((b,i)=>new File([b],`methane-photo-${i+1}.jpg`,{type:'image/jpeg'}))}
+function showReport(r,ph){last=r;lastPhotos=ph||[];$('out').textContent=r;$('out').hidden=$('acts').hidden=$('rlogo').hidden=false;$('phint').hidden=!lastPhotos.length}
+let last='';function gen(){showReport(report(),photos.slice());
+const h=getHist();if(!h[0]||h[0].text!==last){const id=Date.now();h.unshift({id,text:last,n:photos.length});if(photos.length)idb('put','r'+id,photos.slice()).catch(()=>{});h.splice(50).forEach(o=>idb('del','r'+o.id).catch(()=>{}));localStorage.methane_hist=JSON.stringify(h)}hist();$('out').scrollIntoView({behavior:'smooth'})}
 $('gen').onclick=gen;
-function hist(){const h=JSON.parse(localStorage.methane_hist||'[]');$('hist').innerHTML=h.length?'':'<i>No saved reports</i>';
-h.forEach((r,i)=>{const d=document.createElement('div');d.innerHTML=`<b>${r.split('\n')[1]}</b> ${r.split('\n')[2]}<div class="row"><button>View</button><button>Delete</button></div>`;
-const[b1,b2]=d.querySelectorAll('button');b1.onclick=()=>{last=r;$('out').textContent=r;$('out').hidden=$('acts').hidden=$('rlogo').hidden=false;$('out').scrollIntoView()};
-b2.onclick=()=>{h.splice(i,1);localStorage.methane_hist=JSON.stringify(h);hist()};$('hist').appendChild(d)})}hist();
+function getHist(){return JSON.parse(localStorage.methane_hist||'[]').map((r,i)=>typeof r=='string'?{id:i,text:r,n:0}:r)}
+function hist(){const h=getHist();$('hist').innerHTML=h.length?'':'<i>No saved reports</i>';
+h.forEach((o,i)=>{const r=o.text,d=document.createElement('div');d.innerHTML=`<b>${r.split('\n')[1]}</b> ${r.split('\n')[2]}${o.n?' · 📷 '+o.n:''}<div class="thumbs"></div><div class="row"><button>View</button><button>Delete</button></div>`;
+let ph=[];if(o.n)idb('get','r'+o.id).then(p=>{ph=p||[];thumbs(d.querySelector('.thumbs'),ph)}).catch(()=>{});
+const[b1,b2]=d.querySelectorAll('.row button');b1.onclick=()=>{showReport(r,ph);$('out').scrollIntoView()};
+b2.onclick=()=>{h.splice(i,1);idb('del','r'+o.id).catch(()=>{});localStorage.methane_hist=JSON.stringify(h);hist()};$('hist').appendChild(d)})}hist();
 const enc=encodeURIComponent;
-$('share').onclick=async()=>{if(navigator.share)try{await navigator.share({title:'METHANE Sitrep',text:last})}catch(e){}else{copy();alert('Share not supported; copied to clipboard')}};
+$('share').onclick=async()=>{if(navigator.share){const fl=files(lastPhotos),dt={title:'METHANE Sitrep',text:last};if(fl.length&&navigator.canShare&&navigator.canShare({files:fl}))dt.files=fl;else if(fl.length)alert('This browser cannot share photos; sending text only.');try{await navigator.share(dt)}catch(e){}}else{copy();alert('Share not supported; copied to clipboard')}};
 $('sms').onclick=()=>location.href='sms:?&body='+enc(last);
 $('email').onclick=()=>location.href='mailto:?subject='+enc('METHANE SITREP '+($('callsign').value||''))+'&body='+enc(last);
 async function copy(){try{await navigator.clipboard.writeText(last);return true}catch(e){const t=document.createElement('textarea');t.value=last;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();return true}}
@@ -113,7 +136,7 @@ $('copy').onclick=async()=>{await copy();$('copy').textContent='✅ Copied';setT
 $('teams').onclick=async()=>{await copy();alert('Report copied. Teams will open — choose a chat and paste if not pre-filled.');location.href='https://teams.microsoft.com/l/chat/0/0?users=&message='+enc(last)};
 const PH={M:'Mike',E:'Echo',T:'Tango',H:'Hotel',A:'Alpha',N:'November'};
 $('read').onclick=()=>{if(speechSynthesis.speaking){speechSynthesis.cancel();return}
-const parts=last.split('\n').map(l=>l.replace(/^([MEHTAN]) - /,(m,a)=>PH[a]+'. ').replace(/\bP([123])\b/g,'Priority $1').replace(/\//g,', ').replace(/DTG:/,'Date time group.').replace(/https?:\S+/g,'').replace(/(\d)(?=\d)/g,'$1 '));
+const parts=last.split('\n').map(l=>l.replace(/^([MEHTAN]) - /,(m,a)=>PH[a]+'. ').replace(/\bP([123])\b/g,'Priority $1').replace(/\//g,', ').replace(/^SUMMARY \/ UPDATES:/,'Summary and updates.').replace(/^PHOTOS:/,'Photos.').replace(/\[(\d\d):(\d\d)\]/g,'at $1$2 hours,').replace(/DTG:/,'Date time group.').replace(/https?:\S+/g,'').replace(/(\d)(?=\d)/g,'$1 '));
 parts.forEach((p,i)=>{const u=new SpeechSynthesisUtterance(p+(i<parts.length-1?'. Break.':'. Out.'));u.lang='en-GB';u.rate=.8;speechSynthesis.speak(u)})};
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
 </script></body></html>
