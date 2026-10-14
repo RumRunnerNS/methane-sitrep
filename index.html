@@ -68,29 +68,36 @@ const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 const TRI=[['red','Red'],['yellow','Yellow'],['green','Green'],['black','Black'],['white','White']];
 // Section definitions: [letter, id, voice keywords]
 const F=[['M','major',['major incident','major']],['E','loc',['exact location','location','grid reference','what three words','postcode']],
-['T','type',['type of incident','incident type','type']],['H','haz',['hazards','hazard']],['A','access',['access routes','access','rendezvous point','rvp']],
+['T','type',['type of incident','incident type','type','motor vehicle crash','motor vehicle collision','mvc','mva','rtc','road traffic collision']],['H','haz',['hazards','hazard']],['A','access',['access routes','access','rendezvous point','rvp']],
 ['N','cas',['number of casualties','casualties','number']],['E','es',['emergency services','services present','services']],['+','sum',['summary','updates','update']]];
 const FID=F.map(f=>f[1]);
 // ---------- settings ----------
 const SKEY='methane_settings_v1';
-const DEF={version:1,callsign:'',smsPrefix:'',
+const DEF={version:2,callsign:'',smsPrefix:'',
 sections:{
 major:{label:'Major incident',prompt:'Major incident. Declared, standby, or not declared?',hint:'Declared or on standby? (any agency may declare)',prefill:'',chips:[]},
 loc:{label:'Exact location',prompt:'Exact location. Grid reference, what three words, postcode or landmark.',hint:'Grid ref / what3words / postcode / landmark',prefill:'',chips:['Junction of','Northbound','Southbound','Eastbound','Westbound','Opposite','Rear of','Car park','Inside building','Hard shoulder']},
-type:{label:'Type of incident',prompt:'Type of incident.',hint:'e.g. RTC, fire, explosion, CBRN, flooding, vehicles/buildings involved',prefill:'',chips:['RTC','Fire','Building collapse','CBRN','Mass shooting / MTA','Flooding','Explosion','Other']},
+type:{label:'Type of incident',prompt:'Type of incident.',hint:'e.g. motor vehicle crash, fire, explosion, CBRN, flooding, vehicles/buildings involved',prefill:'',chips:['Motor vehicle crash','Fire','Building collapse','CBRN','Mass shooting / MTA','Flooding','Explosion','Barricaded person, no hostage','Barricaded person, hostage','HAZMAT','Active attacker/threat','Wildfire','Other']},
 haz:{label:'Hazards',prompt:'Hazards, present and potential.',hint:'Present and potential hazards',prefill:'',chips:['Fuel','Fire','Traffic','Electrical','Gas','Structural','Chemical','Weather','None']},
 access:{label:'Access',prompt:'Access. Routes in and out, and rendezvous point.',hint:'Safe routes in/out, RVP, marshalling area',prefill:'',chips:['Access clear','Road blocked','RVP set','Single route','Air access']},
 cas:{label:'Number & type of casualties',prompt:'Number and type of casualties. Red, yellow, green, black and white.',hint:'Number, type and severity (triage)',prefill:'',chips:['Entrapped','Paediatric casualties','Triage sieve complete']},
-es:{label:'Emergency services',prompt:'Emergency services, present and required.',hint:'Present on scene and required',prefill:'',chips:['Fire','Police','Ambulance','HART / SORT','Air ambulance','Coastguard','Utilities']},
-sum:{label:'Summary / Updates',prompt:'Summary and updates.',hint:'Overall summary and time-stamped updates',prefill:'',chips:['No change','Scene safe','All casualties evacuated','Request more resources']}},
-email:[],sms:[],teams:[]};
+es:{label:'Emergency services',prompt:'Emergency services, present and required.',hint:'Present on scene and required',prefill:'',chips:['Fire','Police','Ambulance','Air ambulance','LifeFlight','GSAR','Coastguard','Utilities']},
+sum:{label:'Summary / Updates',prompt:'Summary and updates.',hint:'Overall summary and time-stamped updates',prefill:'',chips:['No change','Scene safe','All casualties evacuated','Request more resources','Scene wrap-up']}},
+email:[{name:'EPSO Methane',address:'EPSOmethane@emci.ca',role:'to'}],sms:[],teams:[]};
 const clone=o=>JSON.parse(JSON.stringify(o));
-function mergeSet(x){const s=clone(DEF);if(!x||typeof x!='object')return s;
+function migrate(x){const v=+x.version||1;if(v>=DEF.version)return x;x=clone(x);const S=x.sections||{};
+const fix=(id,rm,add,repl)=>{const a=S[id];if(!a||!Array.isArray(a.chips))return;let c=a.chips;
+if(repl)c=c.map(t=>t===repl[0]?repl[1]:t);c=c.filter(t=>!rm.includes(t));add.forEach(t=>{if(!c.some(y=>y.toLowerCase()==t.toLowerCase())){const o=c.indexOf('Other');o>=0?c.splice(o,0,t):c.push(t)}});a.chips=c};
+if(v<2){fix('type',['RTC'],['Motor vehicle crash','Barricaded person, no hostage','Barricaded person, hostage','HAZMAT','Active attacker/threat','Wildfire'],['RTC','Motor vehicle crash']);
+fix('es',['HART / SORT','HART/SORT'],['GSAR','LifeFlight']);fix('sum',[],['Scene wrap-up']);
+if(Array.isArray(x.email)&&!x.email.some(o=>o&&String(o.address).toLowerCase()=='epsomethane@emci.ca'))x.email.push({name:'EPSO Methane',address:'EPSOmethane@emci.ca',role:'to'})}
+x.version=DEF.version;x._migrated=1;return x}
+function mergeSet(x){const s=clone(DEF);if(!x||typeof x!='object')return s;x=migrate(x);
 for(const k of ['callsign','smsPrefix'])if(typeof x[k]=='string')s[k]=x[k];
 for(const k of ['email','sms','teams'])if(Array.isArray(x[k]))s[k]=x[k].filter(o=>o&&typeof o=='object');
 if(x.sections)for(const id of FID){const a=x.sections[id];if(!a)continue;for(const k of ['label','prompt','hint','prefill'])if(typeof a[k]=='string')s.sections[id][k]=a[k];if(Array.isArray(a.chips))s.sections[id].chips=a.chips.map(String).filter(Boolean)}
 return s}
-let SET;try{SET=mergeSet(JSON.parse(localStorage[SKEY]||'null'))}catch(e){SET=clone(DEF)}
+let SET;try{const raw=JSON.parse(localStorage[SKEY]||'null');SET=mergeSet(raw);if(raw&&(+raw.version||1)<DEF.version)localStorage[SKEY]=JSON.stringify(SET)}catch(e){SET=clone(DEF)}
 const sec=id=>SET.sections[id];
 function saveSet(){localStorage[SKEY]=JSON.stringify(SET)}
 // ---------- form ----------
@@ -140,10 +147,11 @@ const el=$(id),v=el.value.trim();if(v&&norm(v).endsWith(norm(t)))return; // alre
 el.value=collapse(v?v+(sep||' ')+t:t);if(id=='cas')parseCas(el.value);save()}
 function route(text){const kws=[];F.forEach(f=>f[2].forEach(k=>kws.push([k,f[1]])));kws.sort((a,b)=>b[0].length-a[0].length);
 const re=new RegExp('\\b('+kws.map(k=>k[0]).join('|')+')\\b','gi');let m,marks=[];
-while(m=re.exec(text))marks.push([m.index,m[0].length,kws.find(k=>k[0]==m[0].toLowerCase())[1]]);
+while(m=re.exec(text))marks.push([m.index,m[0].length,m[0],kws.find(k=>k[0]==m[0].toLowerCase())[1]]);
 if(!marks.length){if(cur)append(cur,text);return}
 if(marks[0][0]>0&&cur)append(cur,text.slice(0,marks[0][0]));
-marks.forEach((k,i)=>{const seg=text.slice(k[0]+(k[2]=='major'?0:k[1]),i+1<marks.length?marks[i+1][0]:text.length).replace(/^[\s,:.-]*(is|are)?\s*/i,'').trim();cur=k[2];if(seg)append(k[2],seg);else hl(k[2])});renderChips()}
+marks.forEach((k,i)=>{k=[k[0],k[1],k[3],k[2]];const seg=text.slice(k[0]+(k[2]=='major'||KEEP.test(k[3])?0:k[1]),i+1<marks.length?marks[i+1][0]:text.length).replace(/^[\s,:.-]*(is|are)?\s*/i,'').trim();cur=k[2];if(seg)append(k[2],seg);else hl(k[2])});renderChips()}
+const KEEP=/^(motor vehicle (crash|collision)|mvc|mva|rtc|road traffic collision)$/i;
 // ---------- speech recognition (Android-safe) ----------
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition,isAndroid=/Android/i.test(navigator.userAgent),isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent);
 let rec=null,listening=false,paused=false,dictOn=false,guided=-1,onFinal=null,sess,lastG={t:'',at:0},rt=null;
@@ -314,7 +322,7 @@ function openSettings(){draftSet=clone(SET);renderSettings();$('settings').hidde
 function closeSettings(){$('settings').hidden=true}
 $('gear').onclick=openSettings;
 renderChips();if(location.hash=='#settings')openSettings();else if(location.hash=='#guided')setTimeout(()=>$('guided').click(),300);
-const APPV='v8';
+const APPV='v9';
 (function(){const t=document.createElement('div');t.id='ver';t.textContent='METHANE Sitrep '+APPV;t.style.cssText='text-align:center;color:#777;font-size:13px;margin:16px 0';document.body.appendChild(t);
 const k='methane_seen_ver';if(localStorage[k]&&localStorage[k]!==APPV){const o=document.createElement('div');o.textContent='✅ Updated to '+APPV;o.style.cssText='position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#ffd600;color:#000;font-weight:800;padding:10px 18px;border-radius:24px;z-index:99';document.body.appendChild(o);setTimeout(()=>o.remove(),4000)}localStorage[k]=APPV})();
 if('serviceWorker'in navigator){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{reg.update();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')reg.update()})}).catch(()=>{});
