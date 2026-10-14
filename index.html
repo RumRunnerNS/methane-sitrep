@@ -291,7 +291,7 @@ const add=mkBtn('＋ '+addLabel);add.style.width='100%';add.onclick=()=>{arr.pus
 if(focusLast){const ins=box.querySelectorAll('.lrow');const l=ins[ins.length-1];l&&l.querySelector('input')?.focus()}}
 render();return box}
 function renderSettings(){const o=$('settings'),d=draftSet;o.innerHTML='';
-o.append(el('h2',{textContent:'⚙️ Settings'}),el('div',{className:'hint',textContent:'Saved on this device. Use Export to share a config file with your team, and Import to load one.'}));
+o.append(el('h2',{textContent:'⚙️ Settings · '+APPV}),el('div',{className:'hint',textContent:'Saved on this device. Use Export to share a config file with your team, and Import to load one.'}));
 o.append(el('h3',{textContent:'General'}),field('Default callsign',d,'callsign'),field('SMS message prefix (optional, added above the report)',d,'smsPrefix'));
 o.append(el('h3',{textContent:'METHANE sections'}));
 F.forEach(([k,id])=>{const s=d.sections[id],det=el('details',{className:'sec'}),sm=el('summary',{textContent:`${k} – ${s.label}`}),b=el('div');
@@ -314,5 +314,9 @@ function openSettings(){draftSet=clone(SET);renderSettings();$('settings').hidde
 function closeSettings(){$('settings').hidden=true}
 $('gear').onclick=openSettings;
 renderChips();if(location.hash=='#settings')openSettings();else if(location.hash=='#guided')setTimeout(()=>$('guided').click(),300);
-if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+const APPV='v8';
+(function(){const t=document.createElement('div');t.id='ver';t.textContent='METHANE Sitrep '+APPV;t.style.cssText='text-align:center;color:#777;font-size:13px;margin:16px 0';document.body.appendChild(t);
+const k='methane_seen_ver';if(localStorage[k]&&localStorage[k]!==APPV){const o=document.createElement('div');o.textContent='✅ Updated to '+APPV;o.style.cssText='position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#ffd600;color:#000;font-weight:800;padding:10px 18px;border-radius:24px;z-index:99';document.body.appendChild(o);setTimeout(()=>o.remove(),4000)}localStorage[k]=APPV})();
+if('serviceWorker'in navigator){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{reg.update();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')reg.update()})}).catch(()=>{});
+let rl=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(rl||sessionStorage.methane_rl===APPV)return;rl=true;sessionStorage.methane_rl=APPV;location.reload()})}
 </script></body></html>
