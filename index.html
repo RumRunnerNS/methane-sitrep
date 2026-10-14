@@ -4,10 +4,13 @@
 <title>METHANE Sitrep</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#000;color:#fff;font:18px/1.4 system-ui,sans-serif;padding:12px 12px 80px}
-h1{font-size:22px;margin:0;color:#ff5252;text-align:center;flex:1;line-height:1.1}h1 small{display:block;color:#bbb;font-size:13px}
-.hdr{display:flex;align-items:center;gap:10px;margin:4px 0 12px;padding-bottom:10px;border-bottom:2px solid #333}
-.emb{background:#fff;border-radius:50%;width:64px;height:64px;flex:none;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #ff5252}.emb img{width:58px;height:58px;border-radius:50%}
-.ehs{height:40px;width:auto;flex:none}.rlogo{display:flex;justify-content:space-between;align-items:center;margin-top:10px}.rlogo .emb{width:44px;height:44px}.rlogo .emb img{width:40px;height:40px;border-radius:50%}.rlogo .ehs{height:26px}button,select,input,textarea{font:inherit;border-radius:10px}
+body.chipson{padding-bottom:48vh}
+h1{font-size:21px;margin:0;color:#ff5252;text-align:center;flex:1;line-height:1.1}h1 small{display:block;color:#bbb;font-size:13px}
+.hdr{display:flex;align-items:center;gap:8px;margin:4px 0 12px;padding-bottom:10px;border-bottom:2px solid #333}
+.emb{background:#fff;border-radius:50%;width:60px;height:60px;flex:none;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #ff5252}.emb img{width:54px;height:54px;border-radius:50%}
+.ehs{height:34px;width:auto;flex:none}.rlogo{display:flex;justify-content:space-between;align-items:center;margin-top:10px}.rlogo .emb{width:44px;height:44px}.rlogo .emb img{width:40px;height:40px;border-radius:50%}.rlogo .ehs{height:26px}
+#gear{flex:none;min-height:48px;width:48px;padding:0;font-size:24px;border-radius:50%}
+button,select,input,textarea{font:inherit;border-radius:10px}
 button{min-height:56px;padding:10px 14px;border:2px solid #fff;background:#222;color:#fff;font-weight:700}
 button.p{background:#b00020;border-color:#ff5252}button.on{background:#ffd600;color:#000}
 .row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.row>*{flex:1 1 140px}
@@ -21,13 +24,30 @@ textarea,input,select{width:100%;background:#111;color:#fff;border:2px solid #66
 pre{white-space:pre-wrap;background:#111;border:2px solid #fff;padding:10px;border-radius:10px;font-size:17px}
 .thumbs{display:flex;flex-wrap:wrap;gap:8px}.thumbs span{position:relative}.thumbs img{width:84px;height:84px;object-fit:cover;border-radius:8px;border:2px solid #666}.thumbs button{position:absolute;top:-6px;right:-6px;min-height:32px;width:32px;padding:0;border-radius:50%;background:#b00020}
 .mts{margin-top:8px;padding:8px;border:2px solid #ffd600;border-radius:10px}.mts .row{margin:4px 0 0}.mts .row>*{flex:1 1 90px}
-.hint{color:#bbb;font-size:14px;margin:4px 0}.hist div{border-bottom:1px solid #444;padding:8px 0}
+.hint{color:#bbb;font-size:14px;margin:4px 0}.hist>div{border-bottom:1px solid #444;padding:8px 0}
+/* chips */
+#chips{position:fixed;left:0;right:0;bottom:0;max-height:46vh;overflow:auto;background:#0d0d0d;border-top:3px solid #ffd600;padding:8px 10px calc(10px + env(safe-area-inset-bottom));z-index:20}
+#chipTitle{font-weight:800;color:#ffd600;margin:2px 0 4px}#chipLive{color:#bbb;font-size:15px;min-height:20px}
+.chiprow{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}
+.chip{min-height:48px;padding:8px 14px;border-radius:24px;border:2px solid #888;background:#1d1d1d;font-size:17px;flex:0 0 auto}
+.chip.on{background:#ffd600;color:#000;border-color:#ffd600}.chip.tg{border-style:dashed}.chip.nav{background:#333;border-color:#fff}.chip.go{background:#b00020;border-color:#ff5252}
+.stp{display:flex;align-items:center;gap:6px;border-radius:24px;padding:4px 6px}.stp button{min-height:44px;width:48px;padding:0;border-radius:22px;font-size:22px}.stp b{min-width:72px;text-align:center}
+/* overlays */
+.ov{position:fixed;inset:0;background:#000;z-index:40;overflow:auto;padding:12px 12px 100px}
+.ov h2{margin:6px 0;color:#ff5252}.ov h3{margin:16px 0 6px;color:#ffd600}
+.sec{border:2px solid #444;border-radius:12px;margin:8px 0}.sec>summary{padding:14px;font-weight:800;font-size:19px;min-height:52px;cursor:pointer}.sec>div{padding:0 10px 10px}
+.lrow{display:flex;gap:6px;align-items:center;margin:6px 0}.lrow input,.lrow select{flex:1 1 auto;min-width:0}.lrow button{flex:none;min-height:48px;width:48px;padding:0}
+.fl{font-size:15px;color:#bbb;margin:8px 0 2px;display:block}
+.sticky{position:sticky;bottom:0;background:#000;padding:8px 0;border-top:2px solid #333}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:50;display:flex;align-items:flex-end}
+.modal>div{background:#111;border-top:3px solid #ff5252;width:100%;max-height:80vh;overflow:auto;padding:14px}
+.pick{display:flex;align-items:center;gap:12px;min-height:56px;border-bottom:1px solid #333;font-size:18px}.pick input{width:28px;height:28px;min-height:0;flex:none}
 </style></head><body>
-<header class="hdr"><span class="emb"><img src="epso-emblem.webp" alt="EPSO emblem"></span><h1>METHANE Sitrep<small>JESIP</small></h1><img class="ehs" src="ehs-logo.webp" alt="EHS"></header>
+<header class="hdr"><span class="emb"><img src="epso-emblem.webp" alt="EPSO emblem"></span><h1>METHANE Sitrep<small>JESIP</small></h1><img class="ehs" src="ehs-logo.webp" alt="EHS"><button id="gear" aria-label="Settings">⚙️</button></header>
 <div class="row"><input id="callsign" spellcheck="false" autocorrect="off" autocapitalize="characters" autocomplete="off" placeholder="Callsign (e.g. Medic 1)"></div>
 <div class="row"><button id="dict" class="p">🎤 Dictate</button><button id="guided">🧭 Guided</button><button id="clear">Clear</button></div>
 <div id="live" aria-live="polite">Say e.g. “major incident declared… location… type… hazards… access… casualties… services…”</div>
-<form id="form"></form>
+<form id="form" onsubmit="return false"></form>
 <div class="f" id="f_photos"><label><b>📷</b>Photos</label><div class="h">Camera or gallery. Stored on this device only.</div>
 <input type="file" id="photoin" accept="image/*" capture="environment" multiple hidden>
 <div class="row"><button type="button" id="addph">📷 Add photos</button></div><div class="thumbs" id="thumbs"></div></div>
@@ -38,69 +58,156 @@ pre{white-space:pre-wrap;background:#111;border:2px solid #fff;padding:10px;bord
 <button id="teams">Teams</button><button id="read">🔊 Read aloud</button><button id="copy">📋 Copy</button></div>
 <div class="hint" id="phint" hidden>📷 Photos attach only via <b>Share</b>; SMS, Email and Teams send text only.</div>
 <h2>History</h2><div class="hist" id="hist"></div>
+<div id="chips" hidden><div id="chipTitle"></div><div id="chipLive"></div><div class="chiprow" id="chipTargets"></div><div class="chiprow" id="chipBody"></div><div class="chiprow" id="chipNav"></div></div>
+<div id="settings" class="ov" hidden></div>
+<div id="modal" class="modal" hidden><div id="modalBox"></div></div>
+<input type="file" id="setin" accept="application/json,.json" hidden>
 <script>
+const $=id=>document.getElementById(id),enc=encodeURIComponent;
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const TRI=[['red','Red'],['yellow','Yellow'],['green','Green'],['black','Black'],['white','White']];
-const F=[
-['M','Major incident','Declared or on standby? (any agency may declare)','major',['major incident','major']],
-['E1','Exact location','Grid ref / what3words / postcode / landmark','loc',['exact location','location','grid reference','what three words','postcode']],
-['T','Type of incident','e.g. RTC, fire, explosion, CBRN, flooding, vehicles/buildings involved','type',['type of incident','incident type','type']],
-['H','Hazards','Present and potential hazards','haz',['hazards','hazard']],
-['A','Access','Safe routes in/out, RVP, marshalling area','access',['access routes','access','rendezvous point','rvp']],
-['N','Number & type of casualties','Number, type and severity (triage)','cas',['number of casualties','casualties','number']],
-['E2','Emergency services','Present on scene and required','es',['emergency services','services present','services']],
-['+','Summary / Updates','Overall summary and time-stamped updates','sum',['summary','updates','update']]];
-const $=id=>document.getElementById(id),form=$('form');
-form.innerHTML=F.map(([k,t,h,id])=>`<div class="f" id="f_${id}"><label><b>${k[0]}</b>${t}</label><div class="h">${h}</div>`+
+// Section definitions: [letter, id, voice keywords]
+const F=[['M','major',['major incident','major']],['E','loc',['exact location','location','grid reference','what three words','postcode']],
+['T','type',['type of incident','incident type','type']],['H','haz',['hazards','hazard']],['A','access',['access routes','access','rendezvous point','rvp']],
+['N','cas',['number of casualties','casualties','number']],['E','es',['emergency services','services present','services']],['+','sum',['summary','updates','update']]];
+const FID=F.map(f=>f[1]);
+// ---------- settings ----------
+const SKEY='methane_settings_v1';
+const DEF={version:1,callsign:'',smsPrefix:'',
+sections:{
+major:{label:'Major incident',prompt:'Major incident. Declared, standby, or not declared?',hint:'Declared or on standby? (any agency may declare)',prefill:'',chips:[]},
+loc:{label:'Exact location',prompt:'Exact location. Grid reference, what three words, postcode or landmark.',hint:'Grid ref / what3words / postcode / landmark',prefill:'',chips:['Junction of','Northbound','Southbound','Eastbound','Westbound','Opposite','Rear of','Car park','Inside building','Hard shoulder']},
+type:{label:'Type of incident',prompt:'Type of incident.',hint:'e.g. RTC, fire, explosion, CBRN, flooding, vehicles/buildings involved',prefill:'',chips:['RTC','Fire','Building collapse','CBRN','Mass shooting / MTA','Flooding','Explosion','Other']},
+haz:{label:'Hazards',prompt:'Hazards, present and potential.',hint:'Present and potential hazards',prefill:'',chips:['Fuel','Fire','Traffic','Electrical','Gas','Structural','Chemical','Weather','None']},
+access:{label:'Access',prompt:'Access. Routes in and out, and rendezvous point.',hint:'Safe routes in/out, RVP, marshalling area',prefill:'',chips:['Access clear','Road blocked','RVP set','Single route','Air access']},
+cas:{label:'Number & type of casualties',prompt:'Number and type of casualties. Red, yellow, green, black and white.',hint:'Number, type and severity (triage)',prefill:'',chips:['Entrapped','Paediatric casualties','Triage sieve complete']},
+es:{label:'Emergency services',prompt:'Emergency services, present and required.',hint:'Present on scene and required',prefill:'',chips:['Fire','Police','Ambulance','HART / SORT','Air ambulance','Coastguard','Utilities']},
+sum:{label:'Summary / Updates',prompt:'Summary and updates.',hint:'Overall summary and time-stamped updates',prefill:'',chips:['No change','Scene safe','All casualties evacuated','Request more resources']}},
+email:[],sms:[],teams:[]};
+const clone=o=>JSON.parse(JSON.stringify(o));
+function mergeSet(x){const s=clone(DEF);if(!x||typeof x!='object')return s;
+for(const k of ['callsign','smsPrefix'])if(typeof x[k]=='string')s[k]=x[k];
+for(const k of ['email','sms','teams'])if(Array.isArray(x[k]))s[k]=x[k].filter(o=>o&&typeof o=='object');
+if(x.sections)for(const id of FID){const a=x.sections[id];if(!a)continue;for(const k of ['label','prompt','hint','prefill'])if(typeof a[k]=='string')s.sections[id][k]=a[k];if(Array.isArray(a.chips))s.sections[id].chips=a.chips.map(String).filter(Boolean)}
+return s}
+let SET;try{SET=mergeSet(JSON.parse(localStorage[SKEY]||'null'))}catch(e){SET=clone(DEF)}
+const sec=id=>SET.sections[id];
+function saveSet(){localStorage[SKEY]=JSON.stringify(SET)}
+// ---------- form ----------
+const form=$('form');
+form.innerHTML=F.map(([k,id])=>`<div class="f" id="f_${id}"><label><b>${k}</b><span id="lbl_${id}"></span></label><div class="h" id="hint_${id}"></div>`+
 (id=='major'?`<select id="major_s"><option value="">— select —</option><option>MAJOR INCIDENT DECLARED</option><option>MAJOR INCIDENT STANDBY</option><option>NOT DECLARED</option></select><div id="mts" class="mts" hidden><span class="h">Declared / standby at (24h)</span><div class="row"><input type="text" id="m_time" inputmode="numeric" pattern="[0-2][0-9]:[0-5][0-9]" maxlength="5" placeholder="HH:MM" autocomplete="off" spellcheck="false" aria-label="Declaration time (24h)"><input type="date" id="m_date" aria-label="Declaration date"><button type="button" id="m_now">🕒 Now</button></div></div>`:'')+
 (id=='cas'?`<div class="cas">${TRI.map(([k,l])=>`<div class="t_${k}"><span>${l}</span><input type="number" min=0 inputmode=numeric id="${k}" aria-label="${l} count"></div>`).join('')}</div><div class="h">White = uninjured, accounted for</div>`:'')+
 (id=='sum'?`<div class="row"><button type="button" id="addupd">🕒 Add update</button></div>`:'')+(id=='loc'?`<div class="row"><button type="button" id="gps">📍 Use GPS</button></div>`:'')+
 `<textarea id="${id}" rows="2"></textarea></div>`).join('');
+function applyLabels(){FID.forEach(id=>{$('lbl_'+id).textContent=sec(id).label;$('hint_'+id).textContent=sec(id).hint})}applyLabels();
 document.querySelectorAll('textarea,input:not([type])').forEach(e=>{const off=e.id=='callsign'||e.id=='loc';e.spellcheck=!off;e.setAttribute('spellcheck',!off);e.setAttribute('autocorrect',off?'off':'on');e.setAttribute('autocapitalize',off?(e.id=='loc'?'none':'characters'):'sentences');e.lang='en-GB'});
 const S='methane_draft';const ids=[...form.querySelectorAll('input,select,textarea')].map(e=>e.id).concat('callsign');
-try{const d=JSON.parse(localStorage[S]||'{}');[['p1','red'],['p2','yellow'],['p3','green'],['dead','black']].forEach(([o,k])=>{if(d[o]!=null&&d[k]==null)d[k]=d[o]});ids.forEach(i=>{if(d[i]!=null)$(i).value=d[i]})}catch(e){}
+function prefill(){FID.forEach(id=>{const p=sec(id).prefill;if(p&&!$(id).value)$(id).value=p});if(!$('callsign').value&&SET.callsign)$('callsign').value=SET.callsign}
+let hadDraft=false;try{const d=JSON.parse(localStorage[S]||'null');if(d){hadDraft=true;[['p1','red'],['p2','yellow'],['p3','green'],['dead','black']].forEach(([o,k])=>{if(d[o]!=null&&d[k]==null)d[k]=d[o]});ids.forEach(i=>{if(d[i]!=null)$(i).value=d[i]})}}catch(e){}
+if(!hadDraft)prefill();else if(!$('callsign').value&&SET.callsign)$('callsign').value=SET.callsign;
 setTimeout(()=>{prevM=$('major_s').value;$('mts').hidden=!/^MAJOR INCIDENT (DECLARED|STANDBY)$/.test(prevM)});
-document.addEventListener('input',()=>{const d={};ids.forEach(i=>d[i]=$(i).value);localStorage[S]=JSON.stringify(d)});
-$('major_s').onchange=onMajor;$('m_now').onclick=()=>{stampNow();save()};
-$('gps').onclick=()=>{if(!navigator.geolocation)return alert('No geolocation');$('gps').textContent='Locating…';
-navigator.geolocation.getCurrentPosition(p=>{const{latitude:a,longitude:o,accuracy:c}=p.coords;
-$('loc').value=($('loc').value?$('loc').value+'\n':'')+`GPS ${a.toFixed(5)}, ${o.toFixed(5)} (±${Math.round(c)}m) https://maps.google.com/?q=${a.toFixed(5)},${o.toFixed(5)}`;$('gps').textContent='📍 Use GPS';save()},
-e=>{alert('GPS failed: '+e.message);$('gps').textContent='📍 Use GPS'},{enableHighAccuracy:true,timeout:15000})};
+document.addEventListener('input',e=>{if(e.target&&e.target.closest&&e.target.closest('#settings'))return;const d={};ids.forEach(i=>d[i]=$(i).value);localStorage[S]=JSON.stringify(d)});
 function save(){document.dispatchEvent(new Event('input'))}
+$('major_s').onchange=()=>{pushUndo();onMajor();renderChips()};$('m_now').onclick=()=>{stampNow();save()};
+function gps(){if(!navigator.geolocation)return alert('No geolocation');$('gps').textContent='Locating…';
+navigator.geolocation.getCurrentPosition(p=>{const{latitude:a,longitude:o,accuracy:c}=p.coords;pushUndo();
+$('loc').value=($('loc').value?$('loc').value+'\n':'')+`GPS ${a.toFixed(5)}, ${o.toFixed(5)} (±${Math.round(c)}m) https://maps.google.com/?q=${a.toFixed(5)},${o.toFixed(5)}`;$('gps').textContent='📍 Use GPS';save()},
+e=>{alert('GPS failed: '+e.message);$('gps').textContent='📍 Use GPS'},{enableHighAccuracy:true,timeout:15000})}
+$('gps').onclick=gps;
 const NUM={zero:0,none:0,no:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,fifteen:15,twenty:20};
 function n(w){return w in NUM?NUM[w]:parseInt(w)}
 function parseCas(t){const L=t.toLowerCase(),R={red:'red|p ?1|p one|priority one|immediate',yellow:'yellow|p ?2|p two|priority two|urgent',green:'green|p ?3|p three|priority three|delayed|walking wounded',black:'black|dead|deceased|fatalit(?:y|ies)|p ?4',white:'white|uninjured|unhurt|accounted for'};
 for(const k in R){const re=new RegExp('(\\w+)\\s+(?:x\\s*)?(?:'+R[k]+')\\b','g');let m,v=null;while(m=re.exec(L))if(!isNaN(n(m[1])))v=n(m[1]);if(v!=null)$(k).value=v}}
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function stampNow(){const d=new Date(),p=x=>String(x).padStart(2,'0');$('m_time').value=p(d.getHours())+':'+p(d.getMinutes());$('m_date').value=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())}
-let prevM=null;function onMajor(){const v=$('major_s').value,on=/DECLARED$|STANDBY$/.test(v)&&v!='NOT DECLARED';
+let prevM=null;function onMajor(){const v=$('major_s').value,on=/^MAJOR INCIDENT (DECLARED|STANDBY)$/.test(v);
 if(on){if(v!==prevM||!$('m_time').value)stampNow()}else{$('m_time').value='';$('m_date').value=''}$('mts').hidden=!on;prevM=v;save()}
 function declStr(){const t=$('m_time').value,d=$('m_date').value;if(!t)return'';let ds='';if(d){const[y,m,dd]=d.split('-');ds=`, ${+dd} ${MON[m-1]} ${y}`}return ` at ${t}${ds}`}
-function setMajor(t){const L=t.toLowerCase();if(/stand ?by/.test(L))$('major_s').value='MAJOR INCIDENT STANDBY';else if(/not|no major/.test(L))$('major_s').value='NOT DECLARED';else if(/declar|yes|major/.test(L))$('major_s').value='MAJOR INCIDENT DECLARED';onMajor()}
-function route(text){// split dictation by keywords into fields
-const kws=[];F.forEach(f=>f[4].forEach(k=>kws.push([k,f[3]])));kws.sort((a,b)=>b[0].length-a[0].length);
+function setMajor(t){const L=t.toLowerCase();if(/stand ?by/.test(L))$('major_s').value='MAJOR INCIDENT STANDBY';else if(/\bnot\b|no major/.test(L))$('major_s').value='NOT DECLARED';else if(/declar|yes|major/.test(L))$('major_s').value='MAJOR INCIDENT DECLARED';onMajor()}
+// ---------- text helpers / dedupe ----------
+const norm=s=>String(s).toLowerCase().replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim();
+const wc=s=>norm(s)?norm(s).split(' ').length:0;
+function dropWords(t,k){return t.trim().split(/\s+/).slice(k).join(' ')}
+// collapse immediately repeated phrases of 2+ words: "fuel leak fuel leak" -> "fuel leak"
+function collapse(s){let p;do{p=s;s=s.replace(/\b((?:[\w'’-]+[\s,.;]+){1,11}[\w'’-]+)(?:[\s,.;]+\1\b)+/gi,'$1')}while(s!==p);return s}
+let undoStack=[];function pushUndo(){const d={};ids.forEach(i=>d[i]=$(i).value);undoStack.push(d);if(undoStack.length>50)undoStack.shift()}
+function undo(){const d=undoStack.pop();if(!d)return;ids.forEach(i=>{if(d[i]!=null)$(i).value=d[i]});prevM=$('major_s').value;$('mts').hidden=!/^MAJOR INCIDENT (DECLARED|STANDBY)$/.test(prevM);save();renderChips()}
+let cur=null;function hl(id){document.querySelectorAll('.f').forEach(e=>e.classList.toggle('act',e.id=='f_'+id))}
+function append(id,t,sep){t=collapse(t.trim());if(!t)return;hl(id);
+if(id=='major'){setMajor(t);const extra=t.replace(/\b(major incident|major|declared|declare|stand ?by|not)\b/gi,'').replace(/[\s,.]+/g,' ').trim();if(!extra)return save()}
+const el=$(id),v=el.value.trim();if(v&&norm(v).endsWith(norm(t)))return; // already there
+el.value=collapse(v?v+(sep||' ')+t:t);if(id=='cas')parseCas(el.value);save()}
+function route(text){const kws=[];F.forEach(f=>f[2].forEach(k=>kws.push([k,f[1]])));kws.sort((a,b)=>b[0].length-a[0].length);
 const re=new RegExp('\\b('+kws.map(k=>k[0]).join('|')+')\\b','gi');let m,marks=[];
 while(m=re.exec(text))marks.push([m.index,m[0].length,kws.find(k=>k[0]==m[0].toLowerCase())[1]]);
 if(!marks.length){if(cur)append(cur,text);return}
 if(marks[0][0]>0&&cur)append(cur,text.slice(0,marks[0][0]));
-marks.forEach((k,i)=>{const seg=text.slice(k[0]+(k[2]=='major'?0:k[1]),i+1<marks.length?marks[i+1][0]:text.length).replace(/^[\s,:.-]*(is|are)?\s*/i,'').trim();cur=k[2];if(seg)append(k[2],seg);else hl(k[2])});}
-let cur=null;function hl(id){document.querySelectorAll('.f').forEach(e=>e.classList.toggle('act',e.id=='f_'+id));}
-function append(id,t){t=t.trim();if(!t)return;hl(id);if(id=='major')setMajor(t);else{const el=$(id);el.value=(el.value?el.value+' ':'')+t;if(id=='cas')parseCas(el.value)}save()}
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,listening=false,guided=-1,onFinal=null;
-function mkRec(){const r=new SR();r.lang='en-GB';r.continuous=true;r.interimResults=true;
-r.onresult=e=>{let it='';for(let i=e.resultIndex;i<e.results.length;i++){const x=e.results[i];if(x.isFinal){onFinal?onFinal(x[0].transcript):route(x[0].transcript)}else it+=x[0].transcript}$('live').textContent=it||'Listening…'};
-r.onerror=e=>{$('live').textContent='Mic error: '+e.error;if(e.error=='not-allowed')stop()};r.onend=()=>{if(listening)try{r.start()}catch(e){}};return r}
-function start(){if(!SR){alert('Speech recognition not supported in this browser — please type. (Use Chrome or Safari.)');return false}
-if(!rec)rec=mkRec();listening=true;try{rec.start()}catch(e){}return true}
-function stop(){listening=false;onFinal=null;guided=-1;rec&&rec.stop();$('dict').classList.remove('on');$('dict').textContent='🎤 Dictate';$('guided').classList.remove('on');$('guided').textContent='🧭 Guided';hl(null)}
-$('dict').onclick=()=>{if(listening)return stop();if(start()){$('dict').classList.add('on');$('dict').textContent='⏹ Stop'}};
-function say(t,cb){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-GB';u.rate=.85;u.onend=cb||null;speechSynthesis.speak(u)}
-function step(){if(guided>=F.length){const g=guided;stop();say('METHANE complete. Generating report.');gen();return}
-const f=F[guided];hl(f[3]);$('f_'+f[3]).scrollIntoView({behavior:'smooth',block:'center'});
-if(rec)rec.abort();listening=false;say(f[1]+'. '+f[2].replace(/e\.g\..*/,'')+'. Say next when done.',()=>{listening=true;try{rec.start()}catch(e){}})}
-$('guided').onclick=()=>{if(listening||guided>=0)return stop();if(!SR)return alert('Speech recognition not supported — type into each field.');rec=rec||mkRec();
-guided=0;$('guided').classList.add('on');$('guided').textContent='⏹ Stop guided';
-onFinal=t=>{const L=t.trim();if(/\b(next|done|skip)\s*$/i.test(L)){append(F[guided][3],L.replace(/\b(next|done|skip)\s*$/i,''));guided++;step()}else if(/^\s*(back|previous)\s*$/i.test(L)){guided=Math.max(0,guided-1);step()}else append(F[guided][3],L)};step()};
-$('clear').onclick=()=>{if(confirm('Clear all fields?')){ids.forEach(i=>{if(i!='callsign')$(i).value=''});photos=[];idb('put','draft',[]).catch(()=>{});drawDraft();$('phint').hidden=true;save();$('out').hidden=$('acts').hidden=$('rlogo').hidden=true}};
+marks.forEach((k,i)=>{const seg=text.slice(k[0]+(k[2]=='major'?0:k[1]),i+1<marks.length?marks[i+1][0]:text.length).replace(/^[\s,:.-]*(is|are)?\s*/i,'').trim();cur=k[2];if(seg)append(k[2],seg);else hl(k[2])});renderChips()}
+// ---------- speech recognition (Android-safe) ----------
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition,isAndroid=/Android/i.test(navigator.userAgent),isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent);
+let rec=null,listening=false,paused=false,dictOn=false,guided=-1,onFinal=null,sess,lastG={t:'',at:0},rt=null;
+function newSess(){sess={idx:{},all:''}}newSess();
+// Return only words not already delivered. Handles Android Chrome returning cumulative finals
+// (each final repeats earlier text), re-sent finals for the same index, and replays after restart.
+function finalDelta(i,t){let out=t.trim();const nt=norm(out);if(!nt)return'';
+const prev=sess.idx[i];sess.idx[i]=nt;
+if(prev!=null){if(nt===prev||prev.startsWith(nt))return'';if(nt.startsWith(prev+' '))out=dropWords(out,wc(prev))}
+else if(sess.all){if(nt===sess.all||sess.all.endsWith(' '+nt))return'';if(nt.startsWith(sess.all+' '))out=dropWords(out,wc(sess.all))}
+const no=norm(out);if(!no)return'';sess.all=sess.all?sess.all+' '+no:no;
+if(!/^(next|skip|done|back|previous)$/.test(no)&&no===lastG.t&&Date.now()-lastG.at<6000)return'';
+lastG={t:no,at:Date.now()};return out}
+function preview(t){$('live').textContent=t;$('chipLive').textContent=t}
+function mkRec(){const r=new SR();r.lang='en-GB';r.continuous=!isAndroid;r.interimResults=true;r.maxAlternatives=1;
+r.onstart=newSess;
+r.onresult=e=>{let it='';for(let i=e.resultIndex;i<e.results.length;i++){const x=e.results[i],t=x[0].transcript;
+if(x.isFinal){const d=finalDelta(i,t);if(d)(onFinal||route)(d)}else it+=t}
+preview(it?'… '+it:(paused?'':'Listening…'))};
+r.onerror=e=>{if(e.error=='no-speech'||e.error=='aborted')return;preview('Mic error: '+e.error);if(e.error=='not-allowed'||e.error=='service-not-allowed')stop()};
+r.onend=()=>{clearTimeout(rt);if(listening&&!paused)rt=setTimeout(startRec,250)};return r}
+function startRec(){if(!SR||!listening||paused)return;if(!rec)rec=mkRec();try{rec.start()}catch(e){}}
+function pauseRec(){paused=true;clearTimeout(rt);if(rec)try{rec.abort()}catch(e){}}
+function resumeRec(){paused=false;startRec()}
+function stop(){listening=false;dictOn=false;paused=false;clearTimeout(rt);onFinal=null;guided=-1;if(rec)try{rec.abort()}catch(e){}
+$('dict').classList.remove('on');$('dict').textContent='🎤 Dictate';$('guided').classList.remove('on');$('guided').textContent='🧭 Guided';hl(null);preview('Stopped.');renderChips()}
+$('dict').onclick=()=>{if(dictOn||guided>=0)return stop();dictOn=true;$('dict').classList.add('on');$('dict').textContent='⏹ Stop';
+if(SR){listening=true;startRec()}else preview('Voice not supported in this browser — use the chips or type.');cur=cur||'major';hl(cur);renderChips()};
+function say(t,cb){if(!window.speechSynthesis){cb&&cb();return}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-GB';u.rate=.9;let done=false;const fin=()=>{if(!done){done=true;cb&&cb()}};u.onend=fin;u.onerror=fin;setTimeout(fin,Math.max(4000,t.length*110));speechSynthesis.speak(u)}
+// ---------- guided ----------
+function step(){if(guided<0)return;if(guided>=F.length){stop();say('METHANE complete. Generating report.');gen();return}
+const id=F[guided][1];cur=id;hl(id);$('f_'+id).scrollIntoView({behavior:'smooth',block:'center'});renderChips();
+pauseRec();preview('🔊 '+sec(id).prompt);say(sec(id).prompt+(SR?' Say next when done.':''),()=>{if(guided>=0){preview(SR?'Listening…':'Tap chips or type, then Next.');resumeRec()}})}
+const gNext=()=>{guided++;step()},gBack=()=>{guided=Math.max(0,guided-1);step()},gDone=()=>{guided=F.length;step()};
+$('guided').onclick=()=>{if(dictOn||guided>=0)return stop();guided=0;$('guided').classList.add('on');$('guided').textContent='⏹ Stop guided';
+if(SR){listening=true;rec=rec||mkRec()}
+onFinal=t=>{const L=t.trim();if(/^\s*(back|previous)\s*$/i.test(L))return gBack();if(/^\s*repeat\s*$/i.test(L))return step();
+const m=L.match(/\b(next|done|skip)\s*$/i);if(m){append(F[guided][1],L.slice(0,m.index));return /done/i.test(m[1])&&guided==F.length-1?gDone():gNext()}
+append(F[guided][1],L);renderChips()};step()};
+// ---------- chips ----------
+let esMode='present';
+const reEsc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+function chip(label,cls,fn,on){const b=document.createElement('button');b.type='button';b.className='chip'+(cls?' '+cls:'')+(on?' on':'');b.textContent=label;b.onclick=fn;if(on!=null)b.setAttribute('aria-pressed',!!on);return b}
+function hasText(id,t){return new RegExp('(^|[\\s,;])'+reEsc(t)+'(?=$|[\\s,;.])','i').test($(id).value)}
+function toggleText(id,t){pushUndo();const el=$(id);
+if(hasText(id,t))el.value=el.value.replace(new RegExp('(^|[\\s,;]+)'+reEsc(t)+'(?=$|[\\s,;.])','i'),'').replace(/^[\s,;]+/,'').trim();
+else el.value=el.value.trim()?el.value.trim()+', '+t:t;if(id=='cas')parseCas(el.value);hl(id);save();renderChips()}
+function renderChips(){const mode=guided>=0?'g':(dictOn?'d':null);$('chips').hidden=!mode;document.body.classList.toggle('chipson',!!mode);if(!mode)return;
+const id=mode=='g'?F[Math.min(guided,F.length-1)][1]:(cur||'major'),L=F.find(f=>f[1]==id)[0];
+$('chipTitle').textContent=(mode=='g'?`Guided ${Math.min(guided,F.length-1)+1}/${F.length} · `:'🎤 Dictating into · ')+L+' – '+sec(id).label;
+const T=$('chipTargets');T.innerHTML='';if(mode=='d')F.forEach(([k,fid])=>T.appendChild(chip(k=='+'?'Summary':k,'tg',()=>{cur=fid;hl(fid);$('f_'+fid).scrollIntoView({block:'center',behavior:'smooth'});renderChips()},fid==id)));
+const B=$('chipBody');B.innerHTML='';
+if(id=='major')[['Declared','MAJOR INCIDENT DECLARED'],['Standby','MAJOR INCIDENT STANDBY'],['Not declared','NOT DECLARED']].forEach(([l,v])=>B.appendChild(chip(l,'',()=>{pushUndo();$('major_s').value=$('major_s').value==v?'':v;onMajor();hl('major');renderChips()},$('major_s').value==v)));
+if(id=='loc')B.appendChild(chip('📍 Use GPS','',gps));
+if(id=='cas')TRI.forEach(([k,l])=>{const d=document.createElement('div');d.className='stp t_'+k;
+const mk=(s,dv)=>{const b=document.createElement('button');b.type='button';b.textContent=s;b.setAttribute('aria-label',(dv>0?'Add one ':'Remove one ')+l);b.onclick=()=>{pushUndo();$(k).value=Math.max(0,(+$(k).value||0)+dv);hl('cas');save();renderChips()};return b};
+const v=document.createElement('b');v.textContent=l+' '+(+$(k).value||0);d.append(mk('−',-1),v,mk('+',1));B.appendChild(d)});
+if(id=='es')B.appendChild(chip(esMode=='present'?'Marking: PRESENT (tap for required)':'Marking: REQUIRED (tap for present)','nav',()=>{esMode=esMode=='present'?'required':'present';renderChips()}));
+sec(id).chips.forEach(c=>{const t=id=='es'?`${c} (${esMode})`:c;B.appendChild(chip(t,'',()=>toggleText(id,t),hasText(id,t)))});
+const N=$('chipNav');N.innerHTML='';
+if(mode=='g')N.append(chip('◀ Back','nav',gBack),chip('Skip','nav',gNext),chip('🔁 Repeat prompt','nav',step),chip('↩ Undo','nav',undo),chip('Next ▶','nav go',gNext),chip('✔ Done','nav go',gDone));
+else N.append(chip('↩ Undo last','nav',undo),chip('⏹ Stop','nav go',stop))}
+$('clear').onclick=()=>{if(confirm('Clear all fields?')){pushUndo();ids.forEach(i=>{if(i!='callsign')$(i).value=''});prefill();photos=[];idb('put','draft',[]).catch(()=>{});drawDraft();$('phint').hidden=true;onMajor();save();$('out').hidden=$('acts').hidden=$('rlogo').hidden=true;renderChips()}};
+// ---------- report ----------
 function mLine(){const v=$('major_s').value,n=$('major').value.trim(),ty=$('type').value.trim().split('\n')[0];
 let l=/^MAJOR INCIDENT (DECLARED|STANDBY)$/.test(v)?(ty?`M - ${v}: ${ty}${declStr()}`:`M - ${v}${declStr()}`):`M - MAJOR INCIDENT: ${v||'Not known'}`;return l+(n?'\n    '+n:'')}
 function report(){const d=new Date(),pad=x=>String(x).padStart(2,'0'),v=i=>$(i).value.trim()||'Not known';
@@ -117,7 +224,7 @@ N - NUMBER/TYPE OF CASUALTIES: RED ${c[0]} / YELLOW ${c[1]} / GREEN ${c[2]} / BL
 E - EMERGENCY SERVICES: ${v('es')}
 SUMMARY / UPDATES: ${v('sum')}${photos.length?'\nPHOTOS: '+photos.length+' attached':''}
 END OF REPORT`}
-// ---- photos (IndexedDB) ----
+// ---------- photos (IndexedDB) ----------
 let photos=[],lastPhotos=[];
 const db=new Promise((ok,no)=>{const r=indexedDB.open('methane',1);r.onupgradeneeded=()=>r.result.createObjectStore('p');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)});
 async function idb(m,k,v){const d=await db;return new Promise((ok,no)=>{const t=d.transaction('p',m=='get'?'readonly':'readwrite').objectStore('p');const q=m=='get'?t.get(k):m=='del'?t.delete(k):t.put(v,k);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
@@ -128,28 +235,84 @@ function drawDraft(){thumbs($('thumbs'),photos,i=>{photos.splice(i,1);idb('put',
 idb('get','draft').then(p=>{photos=p||[];drawDraft()}).catch(()=>{});
 $('addph').onclick=()=>$('photoin').click();
 $('photoin').onchange=async e=>{for(const f of e.target.files){const b=await shrink(f);if(b)photos.push(b)}e.target.value='';idb('put','draft',photos).catch(()=>{});drawDraft()};
-$('addupd').onclick=()=>{const d=new Date(),t=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'),el=$('sum');el.value=(el.value?el.value+'\n':'')+`[${t}] `;el.focus();el.setSelectionRange(el.value.length,el.value.length);save()};
+$('addupd').onclick=()=>{pushUndo();const d=new Date(),t=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'),el=$('sum');el.value=(el.value?el.value+'\n':'')+`[${t}] `;el.focus();el.setSelectionRange(el.value.length,el.value.length);save()};
 function files(list){return list.map((b,i)=>new File([b],`methane-photo-${i+1}.jpg`,{type:'image/jpeg'}))}
 function showReport(r,ph){last=r;lastPhotos=ph||[];$('out').textContent=r;$('out').hidden=$('acts').hidden=$('rlogo').hidden=false;$('phint').hidden=!lastPhotos.length}
 let last='';function gen(){showReport(report(),photos.slice());
 const h=getHist();if(!h[0]||h[0].text!==last){const id=Date.now();h.unshift({id,text:last,n:photos.length});if(photos.length)idb('put','r'+id,photos.slice()).catch(()=>{});h.splice(50).forEach(o=>idb('del','r'+o.id).catch(()=>{}));localStorage.methane_hist=JSON.stringify(h)}hist();$('out').scrollIntoView({behavior:'smooth'})}
 $('gen').onclick=gen;
-function getHist(){return JSON.parse(localStorage.methane_hist||'[]').map((r,i)=>typeof r=='string'?{id:i,text:r,n:0}:r)}
+function getHist(){try{return JSON.parse(localStorage.methane_hist||'[]').map((r,i)=>typeof r=='string'?{id:i,text:r,n:0}:r)}catch(e){return[]}}
 function hist(){const h=getHist();$('hist').innerHTML=h.length?'':'<i>No saved reports</i>';
-h.forEach((o,i)=>{const r=o.text,d=document.createElement('div');d.innerHTML=`<b>${r.split('\n')[1]}</b> ${r.split('\n')[2]}${o.n?' · 📷 '+o.n:''}<div class="thumbs"></div><div class="row"><button>View</button><button>Delete</button></div>`;
+h.forEach((o,i)=>{const r=o.text,d=document.createElement('div');d.innerHTML=`<b>${esc(r.split('\n')[1])}</b> ${esc(r.split('\n')[2])}${o.n?' · 📷 '+o.n:''}<div class="thumbs"></div><div class="row"><button>View</button><button>Delete</button></div>`;
 let ph=[];if(o.n)idb('get','r'+o.id).then(p=>{ph=p||[];thumbs(d.querySelector('.thumbs'),ph)}).catch(()=>{});
 const[b1,b2]=d.querySelectorAll('.row button');b1.onclick=()=>{showReport(r,ph);$('out').scrollIntoView()};
 b2.onclick=()=>{h.splice(i,1);idb('del','r'+o.id).catch(()=>{});localStorage.methane_hist=JSON.stringify(h);hist()};$('hist').appendChild(d)})}hist();
-const enc=encodeURIComponent;
+// ---------- sending ----------
+function mkBtn(t,cls){const b=document.createElement('button');b.type='button';b.textContent=t;if(cls)b.className=cls;return b}
+function pick(title,items,multi,pre){return new Promise(res=>{const m=$('modal'),b=$('modalBox');b.innerHTML='';const h=document.createElement('h3');h.textContent=title;b.append(h);
+const ins=items.map((it,i)=>{const l=document.createElement('label');l.className='pick';const c=document.createElement('input');c.type=multi?'checkbox':'radio';c.name='pk';c.checked=!!pre[i];l.append(c,document.createTextNode(it));b.append(l);return c});
+const r=document.createElement('div');r.className='row';const ok=mkBtn('Send','p'),none=mkBtn('No recipient'),cn=mkBtn('Cancel');
+const close=v=>{m.hidden=true;res(v)};ok.onclick=()=>close(ins.map((c,i)=>c.checked?i:-1).filter(i=>i>=0));none.onclick=()=>close([]);cn.onclick=()=>close(null);
+r.append(ok,none,cn);b.append(r);m.hidden=false})}
+async function choose(list,title,label,multi,isDef){if(!list.length)return[];if(list.length==1)return[0];return pick(title,list.map(label),multi,list.map(isDef))}
 $('share').onclick=async()=>{if(navigator.share){const fl=files(lastPhotos),dt={title:'METHANE Sitrep',text:last};if(fl.length&&navigator.canShare&&navigator.canShare({files:fl}))dt.files=fl;else if(fl.length)alert('This browser cannot share photos; sending text only.');try{await navigator.share(dt)}catch(e){}}else{copy();alert('Share not supported; copied to clipboard')}};
-$('sms').onclick=()=>location.href='sms:?&body='+enc(last);
-$('email').onclick=()=>location.href='mailto:?subject='+enc('METHANE SITREP '+($('callsign').value||''))+'&body='+enc(last);
+$('sms').onclick=async()=>{const L=SET.sms.filter(o=>o.number&&o.number.trim());const sel=await choose(L,'Send SMS to…',o=>`${o.name||'(no name)'} – ${o.number}`,true,o=>o.def=='1');if(sel==null)return;
+const nums=sel.map(i=>L[i].number.replace(/[^\d+]/g,'')).join(',');const body=(SET.smsPrefix?SET.smsPrefix.trim()+'\n':'')+last;
+location.href='sms:'+nums+(isIOS?'&':'?')+'body='+enc(body)};
+$('email').onclick=async()=>{const L=SET.email.filter(o=>o.address&&o.address.trim());const sel=await choose(L,'Email to…',o=>`${o.name||o.address} <${o.address}>${o.role?' · default '+o.role.toUpperCase():''}`,true,o=>!!o.role);if(sel==null)return;
+const to=sel.filter(i=>L[i].role!='cc').map(i=>L[i].address.trim()),cc=sel.filter(i=>L[i].role=='cc').map(i=>L[i].address.trim());
+location.href='mailto:'+to.map(enc).join(',')+'?'+(cc.length?'cc='+cc.map(enc).join(',')+'&':'')+'subject='+enc('METHANE SITREP '+($('callsign').value||''))+'&body='+enc(last)};
 async function copy(){try{await navigator.clipboard.writeText(last);return true}catch(e){const t=document.createElement('textarea');t.value=last;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();return true}}
 $('copy').onclick=async()=>{await copy();$('copy').textContent='✅ Copied';setTimeout(()=>$('copy').textContent='📋 Copy',1500)};
-$('teams').onclick=async()=>{await copy();alert('Report copied. Teams will open — choose a chat and paste if not pre-filled.');location.href='https://teams.microsoft.com/l/chat/0/0?users=&message='+enc(last)};
+$('teams').onclick=async()=>{const L=SET.teams.filter(o=>o.target&&o.target.trim());const sel=await choose(L,'Send to Teams…',o=>o.name||o.target,false,(o,i)=>i==0);if(sel==null)return;
+await copy();let url;const t=sel.length?L[sel[0]].target.trim():'';
+if(/^https?:\/\//i.test(t))url=t+(t.includes('?')?'&':'?')+'message='+enc(last);
+else url='https://teams.microsoft.com/l/chat/0/0?users='+t.split(/[,;\s]+/).filter(Boolean).map(enc).join(',')+'&message='+enc(last);
+alert('Report copied. Teams will open — paste if the message is not pre-filled.');location.href=url};
 const PH={M:'Mike',E:'Echo',T:'Tango',H:'Hotel',A:'Alpha',N:'November'};
 $('read').onclick=()=>{if(speechSynthesis.speaking){speechSynthesis.cancel();return}
 const parts=last.split('\n').map(l=>l.replace(/^([MEHTAN]) - /,(m,a)=>PH[a]+'. ').replace(/\bP([123])\b/g,'Priority $1').replace(/\bDEAD\b/,'dead').replace(/\(injured (\d+), total persons (\d+)\)/,'. Injured $1. Total persons $2').replace(/\//g,', ').replace(/^SUMMARY \/ UPDATES:/,'Summary and updates.').replace(/^PHOTOS:/,'Photos.').replace(/\[(\d\d):(\d\d)\]/g,'at $1$2 hours,').replace(/\bat (\d\d):(\d\d)(?=,|$)/,'at $1$2 hours').replace(/DTG:/,'Date time group.').replace(/https?:\S+/g,'').replace(/(\d)(?=\d)/g,'$1 '));
 parts.forEach((p,i)=>{const u=new SpeechSynthesisUtterance(p+(i<parts.length-1?'. Break.':'. Out.'));u.lang='en-GB';u.rate=.8;speechSynthesis.speak(u)})};
+// ---------- settings UI ----------
+let draftSet=null;
+function el(tag,props,...kids){const e=document.createElement(tag);Object.assign(e,props||{});kids.forEach(k=>e.append(k));return e}
+function field(label,obj,key,multi){const w=el('div');w.append(el('label',{className:'fl',textContent:label}));
+const i=el(multi?'textarea':'input',{value:obj[key]||''});if(multi)i.rows=2;i.oninput=()=>{obj[key]=i.value};w.append(i);return w}
+function listEd(arr,fields,addLabel,mk){const box=el('div');
+function render(focusLast){box.innerHTML='';arr.forEach((it,i)=>{const r=el('div',{className:'lrow'});
+if(!fields){const inp=el('input',{value:it,placeholder:'Chip text'});inp.oninput=()=>{arr[i]=inp.value};r.append(inp)}
+else{const col=el('div',{style:'flex:1;display:flex;flex-direction:column;gap:4px;min-width:0'});fields.forEach(f=>{let inp;
+if(f.opts){inp=el('select');f.opts.forEach(([v,l])=>inp.append(el('option',{value:v,textContent:l})));inp.value=it[f.k]||'';inp.onchange=()=>{it[f.k]=inp.value}}
+else{inp=el('input',{value:it[f.k]||'',placeholder:f.ph||'',type:f.type||'text'});inp.oninput=()=>{it[f.k]=inp.value}}col.append(inp)});r.append(col)}
+const up=mkBtn('↑'),dn=mkBtn('↓'),del=mkBtn('✕');up.setAttribute('aria-label','Move up');dn.setAttribute('aria-label','Move down');del.setAttribute('aria-label','Delete');
+up.onclick=()=>{if(i>0){[arr[i-1],arr[i]]=[arr[i],arr[i-1]];render()}};dn.onclick=()=>{if(i<arr.length-1){[arr[i+1],arr[i]]=[arr[i],arr[i+1]];render()}};del.onclick=()=>{arr.splice(i,1);render()};
+r.append(up,dn,del);box.append(r)});
+const add=mkBtn('＋ '+addLabel);add.style.width='100%';add.onclick=()=>{arr.push(mk?mk():'');render(true)};box.append(add);
+if(focusLast){const ins=box.querySelectorAll('.lrow');const l=ins[ins.length-1];l&&l.querySelector('input')?.focus()}}
+render();return box}
+function renderSettings(){const o=$('settings'),d=draftSet;o.innerHTML='';
+o.append(el('h2',{textContent:'⚙️ Settings'}),el('div',{className:'hint',textContent:'Saved on this device. Use Export to share a config file with your team, and Import to load one.'}));
+o.append(el('h3',{textContent:'General'}),field('Default callsign',d,'callsign'),field('SMS message prefix (optional, added above the report)',d,'smsPrefix'));
+o.append(el('h3',{textContent:'METHANE sections'}));
+F.forEach(([k,id])=>{const s=d.sections[id],det=el('details',{className:'sec'}),sm=el('summary',{textContent:`${k} – ${s.label}`}),b=el('div');
+b.append(field('Label',s,'label'),field('Guided-mode spoken prompt',s,'prompt',true),field('Hint text',s,'hint'),field('Default / prefill text',s,'prefill',true),
+el('label',{className:'fl',textContent:'Quick-reply chips (used in Guided and Dictate)'}),listEd(s.chips,null,'Add chip'));det.append(sm,b);o.append(det)});
+o.append(el('h3',{textContent:'Send destinations'}));
+o.append(el('label',{className:'fl',textContent:'Email recipients'}),listEd(d.email,[{k:'name',ph:'Name'},{k:'address',ph:'name@example.org',type:'email'},{k:'role',opts:[['','Not pre-selected'],['to','Default To'],['cc','Default CC']]}],'Add email recipient',()=>({name:'',address:'',role:''})));
+o.append(el('label',{className:'fl',textContent:'SMS recipients'}),listEd(d.sms,[{k:'name',ph:'Name'},{k:'number',ph:'+44…',type:'tel'},{k:'def',opts:[['','Not pre-selected'],['1','Pre-selected']]}],'Add SMS recipient',()=>({name:'',number:'',def:''})));
+o.append(el('label',{className:'fl',textContent:'Microsoft Teams targets — paste a chat/channel link, or user emails separated by commas'}),listEd(d.teams,[{k:'name',ph:'Name (e.g. Control room)'},{k:'target',ph:'https://teams.microsoft.com/l/… or a@x.org, b@x.org'}],'Add Teams target',()=>({name:'',target:''})));
+const bar=el('div',{className:'sticky'}),r1=el('div',{className:'row'}),r2=el('div',{className:'row'});
+const sv=mkBtn('💾 Save','p'),cl=mkBtn('Close'),ex=mkBtn('⬇️ Export'),im=mkBtn('⬆️ Import'),rs=mkBtn('↺ Reset to defaults');
+sv.onclick=()=>{SET=mergeSet(draftSet);FID.forEach(id=>SET.sections[id].chips=SET.sections[id].chips.map(s=>s.trim()).filter(Boolean));saveSet();applyLabels();if(!$('callsign').value&&SET.callsign){$('callsign').value=SET.callsign;save()}renderChips();closeSettings()};
+cl.onclick=()=>{closeSettings()};
+ex.onclick=()=>{const blob=new Blob([JSON.stringify(mergeSet(draftSet),null,2)],{type:'application/json'}),a=el('a',{href:URL.createObjectURL(blob),download:'methane-settings.json'});document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000)};
+im.onclick=()=>$('setin').click();
+rs.onclick=()=>{if(confirm('Load default settings? (Tap Save to apply.)')){draftSet=clone(DEF);renderSettings()}};
+r1.append(sv,cl);r2.append(ex,im,rs);bar.append(r1,r2);o.append(bar)}
+$('setin').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const x=JSON.parse(await f.text());if(!x||typeof x!='object'||!x.sections)throw Error('Not a METHANE settings file');draftSet=mergeSet(x);renderSettings();alert('Settings loaded — review and tap Save to apply.')}catch(err){alert('Import failed: '+err.message)}};
+function openSettings(){draftSet=clone(SET);renderSettings();$('settings').hidden=false;$('settings').scrollTop=0}
+function closeSettings(){$('settings').hidden=true}
+$('gear').onclick=openSettings;
+renderChips();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
 </script></body></html>
