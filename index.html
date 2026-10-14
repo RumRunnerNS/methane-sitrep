@@ -73,7 +73,7 @@ const F=[['M','major',['major incident','major']],['E','loc',['exact location','
 const FID=F.map(f=>f[1]);
 // ---------- settings ----------
 const SKEY='methane_settings_v1';
-const DEF={version:2,callsign:'',smsPrefix:'',
+const DEF={version:3,callsign:'',smsPrefix:'',
 sections:{
 major:{label:'Major incident',prompt:'Major incident. Declared, standby, or not declared?',hint:'Declared or on standby? (any agency may declare)',prefill:'',chips:[]},
 loc:{label:'Exact location',prompt:'Exact location. Grid reference, what three words, postcode or landmark.',hint:'Grid ref / what3words / postcode / landmark',prefill:'',chips:['Junction of','Northbound','Southbound','Eastbound','Westbound','Opposite','Rear of','Car park','Inside building','Hard shoulder']},
@@ -83,7 +83,7 @@ access:{label:'Access',prompt:'Access. Routes in and out, and rendezvous point.'
 cas:{label:'Number & type of casualties',prompt:'Number and type of casualties. Red, yellow, green, black and white.',hint:'Number, type and severity (triage)',prefill:'',chips:['Entrapped','Paediatric casualties','Triage sieve complete']},
 es:{label:'Emergency services',prompt:'Emergency services, present and required.',hint:'Present on scene and required',prefill:'',chips:['Fire','Police','Ambulance','Air ambulance','LifeFlight','GSAR','Coastguard','Utilities']},
 sum:{label:'Summary / Updates',prompt:'Summary and updates.',hint:'Overall summary and time-stamped updates',prefill:'',chips:['No change','Scene safe','All casualties evacuated','Request more resources','Scene wrap-up']}},
-email:[{name:'EPSO Methane',address:'EPSOmethane@emci.ca',role:'to'}],sms:[],teams:[]};
+email:[{name:'EPSO Methane',address:'EPSOmethane@emci.ca',role:'to'}],sms:[],teams:[{name:'EPSO METHANE SITREPS | Duty Managers',target:'https://teams.microsoft.com/l/channel/19%3A9073dc587b3747fbab47df1253394a8c%40thread.tacv2/EPSO%20METHANE%20SITREPS?groupId=d9bbb038-907f-4887-8ad1-63f9ba692efb&tenantId=987295b5-64b2-4fb2-bf6a-59af5f1c4a57'}]};
 const clone=o=>JSON.parse(JSON.stringify(o));
 function migrate(x){const v=+x.version||1;if(v>=DEF.version)return x;x=clone(x);const S=x.sections||{};
 const fix=(id,rm,add,repl)=>{const a=S[id];if(!a||!Array.isArray(a.chips))return;let c=a.chips;
@@ -91,6 +91,7 @@ if(repl)c=c.map(t=>t===repl[0]?repl[1]:t);c=c.filter(t=>!rm.includes(t));add.for
 if(v<2){fix('type',['RTC'],['Motor vehicle crash','Barricaded person, no hostage','Barricaded person, hostage','HAZMAT','Active attacker/threat','Wildfire'],['RTC','Motor vehicle crash']);
 fix('es',['HART / SORT','HART/SORT'],['GSAR','LifeFlight']);fix('sum',[],['Scene wrap-up']);
 if(Array.isArray(x.email)&&!x.email.some(o=>o&&String(o.address).toLowerCase()=='epsomethane@emci.ca'))x.email.push({name:'EPSO Methane',address:'EPSOmethane@emci.ca',role:'to'})}
+if(v<3){if(!Array.isArray(x.teams))x.teams=[];if(!x.teams.some(o=>o&&String(o.target).includes('9073dc587b3747fbab47df1253394a8c')))x.teams.unshift(clone(DEF.teams[0]))}
 x.version=DEF.version;x._migrated=1;return x}
 function mergeSet(x){const s=clone(DEF);if(!x||typeof x!='object')return s;x=migrate(x);
 for(const k of ['callsign','smsPrefix'])if(typeof x[k]=='string')s[k]=x[k];
@@ -256,6 +257,7 @@ let ph=[];if(o.n)idb('get','r'+o.id).then(p=>{ph=p||[];thumbs(d.querySelector('.
 const[b1,b2]=d.querySelectorAll('.row button');b1.onclick=()=>{showReport(r,ph);$('out').scrollIntoView()};
 b2.onclick=()=>{h.splice(i,1);idb('del','r'+o.id).catch(()=>{});localStorage.methane_hist=JSON.stringify(h);hist()};$('hist').appendChild(d)})}hist();
 // ---------- sending ----------
+function toast(m){const o=document.createElement('div');o.textContent=m;o.style.cssText='position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#ffd600;color:#000;font-weight:800;padding:10px 18px;border-radius:24px;z-index:99;max-width:90vw;text-align:center';document.body.appendChild(o);setTimeout(()=>o.remove(),3500)}
 function mkBtn(t,cls){const b=document.createElement('button');b.type='button';b.textContent=t;if(cls)b.className=cls;return b}
 function pick(title,items,multi,pre){return new Promise(res=>{const m=$('modal'),b=$('modalBox');b.innerHTML='';const h=document.createElement('h3');h.textContent=title;b.append(h);
 const ins=items.map((it,i)=>{const l=document.createElement('label');l.className='pick';const c=document.createElement('input');c.type=multi?'checkbox':'radio';c.name='pk';c.checked=!!pre[i];l.append(c,document.createTextNode(it));b.append(l);return c});
@@ -274,6 +276,7 @@ async function copy(){try{await navigator.clipboard.writeText(last);return true}
 $('copy').onclick=async()=>{await copy();$('copy').textContent='✅ Copied';setTimeout(()=>$('copy').textContent='📋 Copy',1500)};
 $('teams').onclick=async()=>{const L=SET.teams.filter(o=>o.target&&o.target.trim());const sel=await choose(L,'Send to Teams…',o=>o.name||o.target,false,(o,i)=>i==0);if(sel==null)return;
 await copy();let url;const t=sel.length?L[sel[0]].target.trim():'';
+if(/\/l\/(channel|team)\//i.test(t)){toast('Report copied — paste into the channel');setTimeout(()=>{location.href=t},1200);return}
 if(/^https?:\/\//i.test(t))url=t+(t.includes('?')?'&':'?')+'message='+enc(last);
 else url='https://teams.microsoft.com/l/chat/0/0?users='+t.split(/[,;\s]+/).filter(Boolean).map(enc).join(',')+'&message='+enc(last);
 alert('Report copied. Teams will open — paste if the message is not pre-filled.');location.href=url};
@@ -322,7 +325,7 @@ function openSettings(){draftSet=clone(SET);renderSettings();$('settings').hidde
 function closeSettings(){$('settings').hidden=true}
 $('gear').onclick=openSettings;
 renderChips();if(location.hash=='#settings')openSettings();else if(location.hash=='#guided')setTimeout(()=>$('guided').click(),300);
-const APPV='v9';
+const APPV='v10';
 (function(){const t=document.createElement('div');t.id='ver';t.textContent='METHANE Sitrep '+APPV;t.style.cssText='text-align:center;color:#777;font-size:13px;margin:16px 0';document.body.appendChild(t);
 const k='methane_seen_ver';if(localStorage[k]&&localStorage[k]!==APPV){const o=document.createElement('div');o.textContent='✅ Updated to '+APPV;o.style.cssText='position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#ffd600;color:#000;font-weight:800;padding:10px 18px;border-radius:24px;z-index:99';document.body.appendChild(o);setTimeout(()=>o.remove(),4000)}localStorage[k]=APPV})();
 if('serviceWorker'in navigator){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{reg.update();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')reg.update()})}).catch(()=>{});
