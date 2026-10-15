@@ -73,7 +73,7 @@ const F=[['M','major',['major incident','major']],['E','loc',['exact location','
 const FID=F.map(f=>f[1]);
 // ---------- settings ----------
 const SKEY='methane_settings_v1';
-const DEF={version:4,callsign:'',smsPrefix:'',
+const DEF={version:5,callsign:'',smsPrefix:'',
 sections:{
 major:{label:'Major incident',prompt:'Major incident. Declared, standby, or not declared?',hint:'Declared or on standby? (any agency may declare)',prefill:'',chips:[]},
 loc:{label:'Exact location',prompt:'Exact location. Grid reference, what three words, postcode or landmark.',hint:'Grid ref / what3words / postcode / landmark',prefill:'',chips:['Junction of','Northbound','Southbound','Eastbound','Westbound','Opposite','Rear of','Car park','Inside building','Hard shoulder']},
@@ -83,7 +83,7 @@ access:{label:'Access',prompt:'Access. Routes in and out, and rendezvous point.'
 cas:{label:'Number & type of casualties',prompt:'Number and type of casualties. Red, yellow, green, black and white.',hint:'Number, type and severity (triage)',prefill:'',chips:['Entrapped','Paediatric casualties','Triage sieve complete']},
 es:{label:'Emergency services',prompt:'Emergency services, present and required.',hint:'Present on scene and required',prefill:'',chips:['Fire','Police','Ambulance','Air ambulance','LifeFlight','GSAR','Coastguard','Utilities']},
 sum:{label:'Summary / Updates',prompt:'Summary and updates.',hint:'Overall summary and time-stamped updates',prefill:'',chips:['No change','Scene safe','All casualties evacuated','Request more resources','Scene wrap-up']}},
-email:[{name:'EPSO Methane',address:'EPSOmethane@emci.ca',role:'to'}],sms:[],teams:[{name:'EHS EMC MAJOR EVENT SITREPS',target:'https://teams.microsoft.com/l/channel/19%3A55d675c6962b4d9e9568da461dad38b9%40thread.tacv2/EHS%20EMC%20MAJOR%20EVENT%20SITREPS?groupId=09cb53f3-d30f-4728-a48f-dae54462529e&tenantId=987295b5-64b2-4fb2-bf6a-59af5f1c4a57'}]};
+email:[],sms:[],teams:[{name:'EHS EMC MAJOR EVENT SITREPS',target:'https://teams.microsoft.com/l/channel/19%3A55d675c6962b4d9e9568da461dad38b9%40thread.tacv2/EHS%20EMC%20MAJOR%20EVENT%20SITREPS?groupId=09cb53f3-d30f-4728-a48f-dae54462529e&tenantId=987295b5-64b2-4fb2-bf6a-59af5f1c4a57'}]};
 const clone=o=>JSON.parse(JSON.stringify(o));
 function migrate(x){const v=+x.version||1;if(v>=DEF.version)return x;x=clone(x);const S=x.sections||{};
 const fix=(id,rm,add,repl)=>{const a=S[id];if(!a||!Array.isArray(a.chips))return;let c=a.chips;
@@ -93,6 +93,7 @@ fix('es',['HART / SORT','HART/SORT'],['GSAR','LifeFlight']);fix('sum',[],['Scene
 if(Array.isArray(x.email)&&!x.email.some(o=>o&&String(o.address).toLowerCase()=='epsomethane@emci.ca'))x.email.push({name:'EPSO Methane',address:'EPSOmethane@emci.ca',role:'to'})}
 if(v<3){if(!Array.isArray(x.teams))x.teams=[];if(!x.teams.some(o=>o&&String(o.target).includes('9073dc587b3747fbab47df1253394a8c')))x.teams.unshift(clone(DEF.teams[0]))}
 if(v<4){if(!Array.isArray(x.teams))x.teams=[];x.teams=x.teams.filter(o=>o&&!/d9bbb038-907f-4887-8ad1-63f9ba692efb|9073dc587b3747fbab47df1253394a8c|55d675c6962b4d9e9568da461dad38b9/.test(String(o.target)));x.teams.unshift(clone(DEF.teams[0]))}
+if(v<5&&Array.isArray(x.email))x.email=x.email.filter(o=>!(o&&String(o.address||'').trim().toLowerCase()=='epsomethane@emci.ca'));
 x.version=DEF.version;x._migrated=1;return x}
 function mergeSet(x){const s=clone(DEF);if(!x||typeof x!='object')return s;x=migrate(x);
 for(const k of ['callsign','smsPrefix'])if(typeof x[k]=='string')s[k]=x[k];
@@ -326,7 +327,7 @@ function openSettings(){draftSet=clone(SET);renderSettings();$('settings').hidde
 function closeSettings(){$('settings').hidden=true}
 $('gear').onclick=openSettings;
 renderChips();if(location.hash=='#settings')openSettings();else if(location.hash=='#guided')setTimeout(()=>$('guided').click(),300);
-const APPV='v13',FB='https://signal.group/#CjQKIFLsCHEn62HKd1--KiGSXDdz94M8Z9DSjlp5xroEIL6gEhCn0m5ijXSByL6rE2War5RU';
+const APPV='v14',FB='https://signal.group/#CjQKIFLsCHEn62HKd1--KiGSXDdz94M8Z9DSjlp5xroEIL6gEhCn0m5ijXSByL6rE2War5RU';
 function fbBlock(){const w=document.createElement('div');w.style.cssText='margin:20px 0 8px;text-align:center';const a=document.createElement('a');a.href=FB;a.target='_blank';a.rel='noopener';a.textContent='💬 Feedback / Report a bug';a.style.cssText='display:block;padding:16px;border:2px solid #ffd600;border-radius:12px;background:#222;color:#ffd600;font-weight:800;text-decoration:none;font-size:19px';const h=document.createElement('div');h.className='hint';h.textContent='Opens the EPSO pilot Signal group';w.append(a,h);return w}
 document.body.appendChild(fbBlock());
 (function(){const t=document.createElement('div');t.id='ver';t.textContent='METHANE Sitrep '+APPV;t.style.cssText='text-align:center;color:#777;font-size:13px;margin:16px 0';document.body.appendChild(t);
