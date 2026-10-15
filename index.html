@@ -49,8 +49,8 @@ pre{white-space:pre-wrap;background:#111;border:2px solid #fff;padding:10px;bord
 <div id="live" aria-live="polite">Say e.g. “major incident declared… location… type… hazards… access… casualties… services…”</div>
 <form id="form" onsubmit="return false"></form>
 <div class="f" id="f_photos"><label><b>📷</b>Photos</label><div class="h">Camera or gallery. Stored on this device only.</div>
-<input type="file" id="photoin" accept="image/*" capture="environment" multiple hidden>
-<div class="row"><button type="button" id="addph">📷 Add photos</button></div><div class="thumbs" id="thumbs"></div></div>
+<input type="file" id="photocam" accept="image/*" capture="environment" hidden><input type="file" id="photoin" accept="image/*" multiple hidden>
+<div class="row"><button type="button" id="camph">📷 Take photo</button><button type="button" id="addph">🖼️ Choose from gallery</button></div><div class="thumbs" id="thumbs"></div></div>
 <div class="row"><button class="p" id="gen">Generate report</button></div>
 <div class="rlogo" id="rlogo" hidden><span class="emb"><img src="epso-emblem.svg" alt=""></span><img class="ehs" src="ehs-logo.webp" alt=""></div><pre id="out" hidden></pre>
 <div class="row" id="acts" hidden>
@@ -245,7 +245,9 @@ if(rm){const x=document.createElement('button');x.type='button';x.textContent='�
 function drawDraft(){thumbs($('thumbs'),photos,i=>{photos.splice(i,1);idb('put','draft',photos);drawDraft()})}
 idb('get','draft').then(p=>{photos=p||[];drawDraft()}).catch(()=>{});
 $('addph').onclick=()=>$('photoin').click();
-$('photoin').onchange=async e=>{for(const f of e.target.files){const b=await shrink(f);if(b)photos.push(b)}e.target.value='';idb('put','draft',photos).catch(()=>{});drawDraft()};
+$('camph').onclick=()=>$('photocam').click();
+const onPick=async e=>{const fl=[...e.target.files];e.target.value='';for(const f of fl){const b=await shrink(f);if(b)photos.push(b)}idb('put','draft',photos).catch(()=>{});drawDraft()};
+$('photoin').onchange=onPick;$('photocam').onchange=onPick;
 $('addupd').onclick=()=>{pushUndo();const d=new Date(),t=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'),el=$('sum');el.value=(el.value?el.value+'\n':'')+`[${t}] `;el.focus();el.setSelectionRange(el.value.length,el.value.length);save()};
 function files(list){return list.map((b,i)=>new File([b],`methane-photo-${i+1}.jpg`,{type:'image/jpeg'}))}
 function showReport(r,ph){last=r;lastPhotos=ph||[];$('out').textContent=r;$('out').hidden=$('acts').hidden=$('rlogo').hidden=false;$('phint').hidden=!lastPhotos.length}
@@ -327,7 +329,7 @@ function openSettings(){draftSet=clone(SET);renderSettings();$('settings').hidde
 function closeSettings(){$('settings').hidden=true}
 $('gear').onclick=openSettings;
 renderChips();if(location.hash=='#settings')openSettings();else if(location.hash=='#guided')setTimeout(()=>$('guided').click(),300);
-const APPV='v14',FB='https://signal.group/#CjQKIFLsCHEn62HKd1--KiGSXDdz94M8Z9DSjlp5xroEIL6gEhCn0m5ijXSByL6rE2War5RU';
+const APPV='v15',FB='https://signal.group/#CjQKIFLsCHEn62HKd1--KiGSXDdz94M8Z9DSjlp5xroEIL6gEhCn0m5ijXSByL6rE2War5RU';
 function fbBlock(){const w=document.createElement('div');w.style.cssText='margin:20px 0 8px;text-align:center';const a=document.createElement('a');a.href=FB;a.target='_blank';a.rel='noopener';a.textContent='💬 Feedback / Report a bug';a.style.cssText='display:block;padding:16px;border:2px solid #ffd600;border-radius:12px;background:#222;color:#ffd600;font-weight:800;text-decoration:none;font-size:19px';const h=document.createElement('div');h.className='hint';h.textContent='Opens the EPSO pilot Signal group';w.append(a,h);return w}
 document.body.appendChild(fbBlock());
 (function(){const t=document.createElement('div');t.id='ver';t.textContent='METHANE Sitrep '+APPV;t.style.cssText='text-align:center;color:#777;font-size:13px;margin:16px 0';document.body.appendChild(t);
