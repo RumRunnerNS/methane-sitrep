@@ -7,8 +7,8 @@
 body.chipson{padding-bottom:48vh}
 h1{font-size:19px;margin:0;color:#ff5252;text-align:center;flex:1;line-height:1.1}h1 small{display:block;color:#bbb;font-size:13px}
 .hdr{display:flex;align-items:center;gap:8px;margin:4px 0 12px;padding-bottom:10px;border-bottom:2px solid #333}
-.emb{background:#fff;border-radius:50%;width:60px;height:60px;flex:none;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #ff5252}.emb img{width:54px;height:54px;border-radius:50%}
-.ehs{height:34px;width:auto;flex:none}.rlogo{display:flex;justify-content:space-between;align-items:center;margin-top:10px}.rlogo .emb{width:44px;height:44px}.rlogo .emb img{width:40px;height:40px;border-radius:50%}.rlogo .ehs{height:26px}
+.emb{background:#fff;border-radius:50%;width:60px;height:60px;flex:none;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #ff5252}.emb img{width:56px;height:56px;object-fit:contain;image-rendering:auto}
+.ehs{height:34px;width:auto;flex:none}.rlogo{display:flex;justify-content:space-between;align-items:center;margin-top:10px}.rlogo .emb{width:44px;height:44px}.rlogo .emb img{width:42px;height:42px;object-fit:contain}.rlogo .ehs{height:26px}
 #gear{flex:none;min-height:48px;width:48px;padding:0;font-size:24px;border-radius:50%}
 button,select,input,textarea{font:inherit;border-radius:10px}
 button{min-height:56px;padding:10px 14px;border:2px solid #fff;background:#222;color:#fff;font-weight:700}
@@ -43,7 +43,7 @@ pre{white-space:pre-wrap;background:#111;border:2px solid #fff;padding:10px;bord
 .modal>div{background:#111;border-top:3px solid #ff5252;width:100%;max-height:80vh;overflow:auto;padding:14px}
 .pick{display:flex;align-items:center;gap:12px;min-height:56px;border-bottom:1px solid #333;font-size:18px}.pick input{width:28px;height:28px;min-height:0;flex:none}
 </style></head><body>
-<header class="hdr"><span class="emb"><img src="epso-emblem.webp" alt="EPSO emblem"></span><h1>METHANE Sitrep<small>JESIP</small></h1><img class="ehs" src="ehs-logo.webp" alt="EHS"><button id="gear" aria-label="Settings">⚙️</button></header>
+<header class="hdr"><span class="emb"><img src="epso-emblem.svg" alt="EPSO emblem"></span><h1>METHANE Sitrep<small>JESIP</small></h1><img class="ehs" src="ehs-logo.webp" alt="EHS"><button id="gear" aria-label="Settings">⚙️</button></header>
 <div class="row"><input id="callsign" spellcheck="false" autocorrect="off" autocapitalize="characters" autocomplete="off" placeholder="Callsign (e.g. Medic 1)"></div>
 <div class="row"><button id="dict" class="p">🎤 Dictate</button><button id="guided">🧭 Guided</button><button id="clear">Clear</button></div>
 <div id="live" aria-live="polite">Say e.g. “major incident declared… location… type… hazards… access… casualties… services…”</div>
@@ -52,7 +52,7 @@ pre{white-space:pre-wrap;background:#111;border:2px solid #fff;padding:10px;bord
 <input type="file" id="photoin" accept="image/*" capture="environment" multiple hidden>
 <div class="row"><button type="button" id="addph">📷 Add photos</button></div><div class="thumbs" id="thumbs"></div></div>
 <div class="row"><button class="p" id="gen">Generate report</button></div>
-<div class="rlogo" id="rlogo" hidden><span class="emb"><img src="epso-emblem.webp" alt=""></span><img class="ehs" src="ehs-logo.webp" alt=""></div><pre id="out" hidden></pre>
+<div class="rlogo" id="rlogo" hidden><span class="emb"><img src="epso-emblem.svg" alt=""></span><img class="ehs" src="ehs-logo.webp" alt=""></div><pre id="out" hidden></pre>
 <div class="row" id="acts" hidden>
 <button id="share">📤 Share</button><button id="sms">💬 SMS</button><button id="email">✉️ Email</button>
 <button id="teams">Teams</button><button id="read">🔊 Read aloud</button><button id="copy">📋 Copy</button></div>
@@ -326,7 +326,7 @@ function openSettings(){draftSet=clone(SET);renderSettings();$('settings').hidde
 function closeSettings(){$('settings').hidden=true}
 $('gear').onclick=openSettings;
 renderChips();if(location.hash=='#settings')openSettings();else if(location.hash=='#guided')setTimeout(()=>$('guided').click(),300);
-const APPV='v12',FB='https://signal.group/#CjQKIFLsCHEn62HKd1--KiGSXDdz94M8Z9DSjlp5xroEIL6gEhCn0m5ijXSByL6rE2War5RU';
+const APPV='v13',FB='https://signal.group/#CjQKIFLsCHEn62HKd1--KiGSXDdz94M8Z9DSjlp5xroEIL6gEhCn0m5ijXSByL6rE2War5RU';
 function fbBlock(){const w=document.createElement('div');w.style.cssText='margin:20px 0 8px;text-align:center';const a=document.createElement('a');a.href=FB;a.target='_blank';a.rel='noopener';a.textContent='💬 Feedback / Report a bug';a.style.cssText='display:block;padding:16px;border:2px solid #ffd600;border-radius:12px;background:#222;color:#ffd600;font-weight:800;text-decoration:none;font-size:19px';const h=document.createElement('div');h.className='hint';h.textContent='Opens the EPSO pilot Signal group';w.append(a,h);return w}
 document.body.appendChild(fbBlock());
 (function(){const t=document.createElement('div');t.id='ver';t.textContent='METHANE Sitrep '+APPV;t.style.cssText='text-align:center;color:#777;font-size:13px;margin:16px 0';document.body.appendChild(t);
