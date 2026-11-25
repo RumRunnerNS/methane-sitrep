@@ -1,0 +1,4 @@
+@zxing/library 0.21.3 (UMD build, vendored for offline use)
+https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js
+https://github.com/zxing-js/library
+License: MIT

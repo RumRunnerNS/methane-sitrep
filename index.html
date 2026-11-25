@@ -19,7 +19,11 @@ button.p{background:#b00020;border-color:#ff5252}button.on{background:#ffd600;co
 .h{color:#bbb;font-size:15px;margin:2px 0 6px}
 textarea,input,select{width:100%;background:#111;color:#fff;border:2px solid #666;padding:10px;min-height:52px}
 .cas{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.cas div{text-align:center;font-weight:800;border-radius:10px;padding:4px 3px;font-size:15px}.cas input{text-align:center;font-size:22px;font-weight:800;padding:6px 2px}
+.cas small.tc{display:block;font-size:11px;font-weight:700;line-height:1.2;min-height:14px;opacity:.95}
 .t_red{background:#d50000}.t_yellow{background:#ffd600;color:#000}.t_green{background:#00a843}.t_black{background:#000;border:2px solid #fff}.t_white{background:#fff;color:#000}.cas .t_yellow input,.cas .t_white input{background:#fff;color:#000;border-color:#000}
+#taglist{margin-top:8px}.tagrow{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #444}.tagid{font-weight:800;font-size:18px;letter-spacing:.06em}.tagmeta{color:#bbb;font-size:14px}.tagcol{display:inline-block;padding:6px 8px;border-radius:8px;font-weight:800;min-width:64px;text-align:center;flex:none}.tagrow button{flex:none;min-height:44px;padding:8px 10px}.tagrow button:last-child{width:48px;padding:0}
+#scanov{position:fixed;inset:0;background:#000;z-index:60;display:flex;flex-direction:column}#scanov[hidden]{display:none!important}#scanstage{position:relative;flex:1;min-height:0}#scanvid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}#scanframe{position:absolute;left:8%;right:8%;top:28%;height:22%;border:3px solid #ffd600;border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.35);pointer-events:none}#scanbar{position:relative;padding:10px 10px calc(12px + env(safe-area-inset-bottom));background:#111}#scanstat{font-weight:800;margin:0 0 8px;text-align:center}
+#tagpick{z-index:70}#tagpick .crow{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0}#tagpick .crow button{min-height:56px;padding:6px 4px;font-size:15px}#tagpick .decon{width:100%;margin:8px 0}
 #live{min-height:40px;background:#111;border:1px dashed #666;padding:8px;border-radius:10px;color:#ffd600}
 pre{white-space:pre-wrap;background:#111;border:2px solid #fff;padding:10px;border-radius:10px;font-size:17px}
 .thumbs{display:flex;flex-wrap:wrap;gap:8px}.thumbs span{position:relative}.thumbs img{width:84px;height:84px;object-fit:cover;border-radius:8px;border:2px solid #666}.thumbs button{position:absolute;top:-6px;right:-6px;min-height:32px;width:32px;padding:0;border-radius:50%;background:#b00020}
@@ -61,6 +65,12 @@ pre{white-space:pre-wrap;background:#111;border:2px solid #fff;padding:10px;bord
 <div id="chips" hidden><div id="chipTitle"></div><div id="chipLive"></div><div class="chiprow" id="chipTargets"></div><div class="chiprow" id="chipBody"></div><div class="chiprow" id="chipNav"></div></div>
 <div id="settings" class="ov" hidden></div>
 <div id="modal" class="modal" hidden><div id="modalBox"></div></div>
+<div id="scanov" hidden>
+<div id="scanstage"><video id="scanvid" playsinline muted autoplay></video><div id="scanframe" aria-hidden="true"></div></div>
+<div id="scanbar"><div id="scanstat">Point the camera at the barcode on the tag</div>
+<div class="row"><button type="button" id="scanflash" hidden>🔦 Torch</button><button type="button" id="scanmanual">⌨️ Type tag number</button><button type="button" id="scanclose">Close</button></div></div>
+</div>
+<div id="tagpick" class="modal" hidden><div id="tagpickBox"></div></div>
 <input type="file" id="setin" accept="application/json,.json" hidden>
 <script>
 const $=id=>document.getElementById(id),enc=encodeURIComponent;
@@ -107,18 +117,20 @@ function saveSet(){localStorage[SKEY]=JSON.stringify(SET)}
 const form=$('form');
 form.innerHTML=F.map(([k,id])=>`<div class="f" id="f_${id}"><label><b>${k}</b><span id="lbl_${id}"></span></label><div class="h" id="hint_${id}"></div>`+
 (id=='major'?`<select id="major_s"><option value="">— select —</option><option>MAJOR INCIDENT DECLARED</option><option>MAJOR INCIDENT STANDBY</option><option>NOT DECLARED</option></select><div id="mts" class="mts" hidden><span class="h">Declared / standby at (24h)</span><div class="row"><input type="text" id="m_time" inputmode="numeric" pattern="[0-2][0-9]:[0-5][0-9]" maxlength="5" placeholder="HH:MM" autocomplete="off" spellcheck="false" aria-label="Declaration time (24h)"><input type="date" id="m_date" aria-label="Declaration date"><button type="button" id="m_now">🕒 Now</button></div></div>`:'')+
-(id=='cas'?`<div class="cas">${TRI.map(([k,l])=>`<div class="t_${k}"><span>${l}</span><input type="number" min=0 inputmode=numeric id="${k}" aria-label="${l} count"></div>`).join('')}</div><div class="h">White = uninjured, accounted for</div>`:'')+
+(id=='cas'?`<div class="cas">${TRI.map(([k,l])=>`<div class="t_${k}"><span>${l}</span><input type="number" min=0 inputmode=numeric id="${k}" aria-label="${l} count"><small class="tc" id="tc_${k}"></small></div>`).join('')}</div><div class="h">White = uninjured, accounted for. Counts use the higher of the number you type and the number of scanned tags.</div><div class="row"><button type="button" id="scantag">🏷️ Scan triage tag</button><button type="button" id="typetag">⌨️ Type tag number</button></div><div id="taglist"></div>`:'')+
 (id=='sum'?`<div class="row"><button type="button" id="addupd">🕒 Add update</button></div>`:'')+(id=='loc'?`<div class="row"><button type="button" id="gps">📍 Use GPS</button></div>`:'')+
 `<textarea id="${id}" rows="2"></textarea></div>`).join('');
 function applyLabels(){FID.forEach(id=>{$('lbl_'+id).textContent=sec(id).label;$('hint_'+id).textContent=sec(id).hint})}applyLabels();
 document.querySelectorAll('textarea,input:not([type])').forEach(e=>{const off=e.id=='callsign'||e.id=='loc';e.spellcheck=!off;e.setAttribute('spellcheck',!off);e.setAttribute('autocorrect',off?'off':'on');e.setAttribute('autocapitalize',off?(e.id=='loc'?'none':'characters'):'sentences');e.lang='en-GB'});
 const S='methane_draft';const ids=[...form.querySelectorAll('input,select,textarea')].map(e=>e.id).concat('callsign');
+let tags=[],draftTags=null;
 function prefill(){FID.forEach(id=>{const p=sec(id).prefill;if(p&&!$(id).value)$(id).value=p});if(!$('callsign').value&&SET.callsign)$('callsign').value=SET.callsign}
-let hadDraft=false;try{const d=JSON.parse(localStorage[S]||'null');if(d){hadDraft=true;[['p1','red'],['p2','yellow'],['p3','green'],['dead','black']].forEach(([o,k])=>{if(d[o]!=null&&d[k]==null)d[k]=d[o]});ids.forEach(i=>{if(d[i]!=null)$(i).value=d[i]})}}catch(e){}
+let hadDraft=false;try{const d=JSON.parse(localStorage[S]||'null');if(d){hadDraft=true;[['p1','red'],['p2','yellow'],['p3','green'],['dead','black']].forEach(([o,k])=>{if(d[o]!=null&&d[k]==null)d[k]=d[o]});ids.forEach(i=>{if(d[i]!=null)$(i).value=d[i]});if(Array.isArray(d.tags))draftTags=d.tags}}catch(e){}
 if(!hadDraft)prefill();else if(!$('callsign').value&&SET.callsign)$('callsign').value=SET.callsign;
 setTimeout(()=>{prevM=$('major_s').value;$('mts').hidden=!/^MAJOR INCIDENT (DECLARED|STANDBY)$/.test(prevM)});
-document.addEventListener('input',e=>{if(e.target&&e.target.closest&&e.target.closest('#settings'))return;const d={};ids.forEach(i=>d[i]=$(i).value);localStorage[S]=JSON.stringify(d)});
-function save(){document.dispatchEvent(new Event('input'))}
+function saveDraft(){const d={};ids.forEach(i=>d[i]=$(i).value);d.tags=tags;localStorage[S]=JSON.stringify(d)}
+document.addEventListener('input',e=>{if(e.target&&e.target.closest&&e.target.closest('#settings'))return;saveDraft()});
+function save(){saveDraft()}
 $('major_s').onchange=()=>{pushUndo();onMajor();renderChips()};$('m_now').onclick=()=>{stampNow();save()};
 function gps(){if(!navigator.geolocation)return alert('No geolocation');$('gps').textContent='Locating…';
 navigator.geolocation.getCurrentPosition(p=>{const{latitude:a,longitude:o,accuracy:c}=p.coords;pushUndo();
@@ -128,7 +140,7 @@ $('gps').onclick=gps;
 const NUM={zero:0,none:0,no:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,fifteen:15,twenty:20};
 function n(w){return w in NUM?NUM[w]:parseInt(w)}
 function parseCas(t){const L=t.toLowerCase(),R={red:'red|p ?1|p one|priority one|immediate',yellow:'yellow|p ?2|p two|priority two|urgent',green:'green|p ?3|p three|priority three|delayed|walking wounded',black:'black|dead|deceased|fatalit(?:y|ies)|p ?4',white:'white|uninjured|unhurt|accounted for'};
-for(const k in R){const re=new RegExp('(\\w+)\\s+(?:x\\s*)?(?:'+R[k]+')\\b','g');let m,v=null;while(m=re.exec(L))if(!isNaN(n(m[1])))v=n(m[1]);if(v!=null)$(k).value=v}}
+for(const k in R){const re=new RegExp('(\\w+)\\s+(?:x\\s*)?(?:'+R[k]+')\\b','g');let m,v=null;while(m=re.exec(L))if(!isNaN(n(m[1])))v=n(m[1]);if(v!=null)$(k).value=v}if(typeof syncCasFromTags==='function')syncCasFromTags()}
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function stampNow(){const d=new Date(),p=x=>String(x).padStart(2,'0');$('m_time').value=p(d.getHours())+':'+p(d.getMinutes());$('m_date').value=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())}
 let prevM=null;function onMajor(){const v=$('major_s').value,on=/^MAJOR INCIDENT (DECLARED|STANDBY)$/.test(v);
@@ -141,8 +153,8 @@ const wc=s=>norm(s)?norm(s).split(' ').length:0;
 function dropWords(t,k){return t.trim().split(/\s+/).slice(k).join(' ')}
 // collapse immediately repeated phrases of 2+ words: "fuel leak fuel leak" -> "fuel leak"
 function collapse(s){let p;do{p=s;s=s.replace(/\b((?:[\w'’-]+[\s,.;]+){1,11}[\w'’-]+)(?:[\s,.;]+\1\b)+/gi,'$1')}while(s!==p);return s}
-let undoStack=[];function pushUndo(){const d={};ids.forEach(i=>d[i]=$(i).value);undoStack.push(d);if(undoStack.length>50)undoStack.shift()}
-function undo(){const d=undoStack.pop();if(!d)return;ids.forEach(i=>{if(d[i]!=null)$(i).value=d[i]});prevM=$('major_s').value;$('mts').hidden=!/^MAJOR INCIDENT (DECLARED|STANDBY)$/.test(prevM);save();renderChips()}
+let undoStack=[];function pushUndo(){const d={};ids.forEach(i=>d[i]=$(i).value);d.tags=tags.map(t=>Object.assign({},t));undoStack.push(d);if(undoStack.length>50)undoStack.shift()}
+function undo(){const d=undoStack.pop();if(!d)return;ids.forEach(i=>{if(d[i]!=null)$(i).value=d[i]});if(Array.isArray(d.tags)){tags=d.tags.map(t=>Object.assign({},t));drawTags();syncCasFromTags({quiet:true})}prevM=$('major_s').value;$('mts').hidden=!/^MAJOR INCIDENT (DECLARED|STANDBY)$/.test(prevM);save();renderChips()}
 let cur=null;function hl(id){document.querySelectorAll('.f').forEach(e=>e.classList.toggle('act',e.id=='f_'+id))}
 function append(id,t,sep){t=collapse(t.trim());if(!t)return;hl(id);
 if(id=='major'){setMajor(t);const extra=t.replace(/\b(major incident|major|declared|declare|stand ?by|not)\b/gi,'').replace(/[\s,.]+/g,' ').trim();if(!extra)return save()}
@@ -209,20 +221,21 @@ const T=$('chipTargets');T.innerHTML='';if(mode=='d')F.forEach(([k,fid])=>T.appe
 const B=$('chipBody');B.innerHTML='';
 if(id=='major')[['Declared','MAJOR INCIDENT DECLARED'],['Standby','MAJOR INCIDENT STANDBY'],['Not declared','NOT DECLARED']].forEach(([l,v])=>B.appendChild(chip(l,'',()=>{pushUndo();$('major_s').value=$('major_s').value==v?'':v;onMajor();hl('major');renderChips()},$('major_s').value==v)));
 if(id=='loc')B.appendChild(chip('📍 Use GPS','',gps));
-if(id=='cas')TRI.forEach(([k,l])=>{const d=document.createElement('div');d.className='stp t_'+k;
-const mk=(s,dv)=>{const b=document.createElement('button');b.type='button';b.textContent=s;b.setAttribute('aria-label',(dv>0?'Add one ':'Remove one ')+l);b.onclick=()=>{pushUndo();$(k).value=Math.max(0,(+$(k).value||0)+dv);hl('cas');save();renderChips()};return b};
-const v=document.createElement('b');v.textContent=l+' '+(+$(k).value||0);d.append(mk('−',-1),v,mk('+',1));B.appendChild(d)});
+if(id=='cas'){B.appendChild(chip('🏷️ Scan tag','',()=>openScanner()));TRI.forEach(([k,l])=>{const d=document.createElement('div');d.className='stp t_'+k;
+const mk=(s,dv)=>{const b=document.createElement('button');b.type='button';b.textContent=s;b.setAttribute('aria-label',(dv>0?'Add one ':'Remove one ')+l);b.onclick=()=>{pushUndo();$(k).value=Math.max(taggedCount(k),(+$(k).value||0)+dv);hl('cas');save();renderChips()};return b};
+const v=document.createElement('b');v.textContent=l+' '+(+$(k).value||0);d.append(mk('−',-1),v,mk('+',1));B.appendChild(d)});}
 if(id=='es')B.appendChild(chip(esMode=='present'?'Marking: PRESENT (tap for required)':'Marking: REQUIRED (tap for present)','nav',()=>{esMode=esMode=='present'?'required':'present';renderChips()}));
 sec(id).chips.forEach(c=>{const t=id=='es'?`${c} (${esMode})`:c;B.appendChild(chip(t,'',()=>toggleText(id,t),hasText(id,t)))});
 const N=$('chipNav');N.innerHTML='';
 if(mode=='g')N.append(chip('◀ Back','nav',gBack),chip('Skip','nav',gNext),chip('🔁 Repeat prompt','nav',step),chip('↩ Undo','nav',undo),chip('Next ▶','nav go',gNext),chip('✔ Done','nav go',gDone));
 else N.append(chip('↩ Undo last','nav',undo),chip('⏹ Stop','nav go',stop))}
-$('clear').onclick=()=>{if(confirm('Clear all fields?')){pushUndo();ids.forEach(i=>{if(i!='callsign')$(i).value=''});prefill();photos=[];idb('put','draft',[]).catch(()=>{});drawDraft();$('phint').hidden=true;onMajor();save();$('out').hidden=$('acts').hidden=$('rlogo').hidden=true;renderChips()}};
+$('clear').onclick=()=>{if(confirm('Clear all fields?')){pushUndo();ids.forEach(i=>{if(i!='callsign')$(i).value=''});prefill();photos=[];tags=[];idb('put','draft',[]).catch(()=>{});drawDraft();drawTags();syncCasFromTags({quiet:true});$('phint').hidden=true;onMajor();save();$('out').hidden=$('acts').hidden=$('rlogo').hidden=true;renderChips()}};
 // ---------- report ----------
 function mLine(){const v=$('major_s').value,n=$('major').value.trim(),ty=$('type').value.trim().split('\n')[0];
 let l=/^MAJOR INCIDENT (DECLARED|STANDBY)$/.test(v)?(ty?`M - ${v}: ${ty}${declStr()}`:`M - ${v}${declStr()}`):`M - MAJOR INCIDENT: ${v||'Not known'}`;return l+(n?'\n    '+n:'')}
+function casCounts(){return TRI.map(([k])=>Math.max(+$(k).value||0,taggedCount(k)))}
 function report(){const d=new Date(),pad=x=>String(x).padStart(2,'0'),v=i=>$(i).value.trim()||'Not known';
-const c=TRI.map(([k])=>+$(k).value||0),alive=c[0]+c[1]+c[2],tot=c.reduce((a,b)=>a+b,0);
+const c=casCounts(),alive=c[0]+c[1]+c[2],tot=c.reduce((a,b)=>a+b,0);
 return `METHANE SITREP
 DTG: ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())} (local)
 FROM: ${$('callsign').value.trim()||'Unknown callsign'}
@@ -231,7 +244,7 @@ E - EXACT LOCATION: ${v('loc')}
 T - TYPE OF INCIDENT: ${v('type')}
 H - HAZARDS: ${v('haz')}
 A - ACCESS: ${v('access')}
-N - NUMBER/TYPE OF CASUALTIES: RED ${c[0]} / YELLOW ${c[1]} / GREEN ${c[2]} / BLACK ${c[3]} / WHITE (uninjured, accounted for) ${c[4]} (injured ${alive}, total persons ${tot})${$('cas').value.trim()?'\n    '+$('cas').value.trim():''}
+N - NUMBER/TYPE OF CASUALTIES: RED ${c[0]} / YELLOW ${c[1]} / GREEN ${c[2]} / BLACK ${c[3]} / WHITE (uninjured, accounted for) ${c[4]} (injured ${alive}, total persons ${tot})${$('cas').value.trim()?'\n    '+$('cas').value.trim():''}${tagBlock()}
 E - EMERGENCY SERVICES: ${v('es')}
 SUMMARY / UPDATES: ${v('sum')}${photos.length?'\nPHOTOS: '+photos.length+' attached':''}
 END OF REPORT`}
@@ -257,7 +270,7 @@ async function copyText(s){const t=s==null?last:s;try{await navigator.clipboard.
 async function shareFiles(text,fl,pickMsg,title){const copyP=copyText(text),ttl=title||'METHANE Sitrep',toastPick=()=>toast(pickMsg||'Report copied — pick your app and paste if the text is missing.'),tryShare=async dt=>{try{await navigator.share(dt);return'ok'}catch(e){return isAbort(e)?'abort':'fail'}};if(!navigator.share||!fl.length){await copyP;if(fl.length&&confirm('This device cannot attach photos through the share sheet. The report is on the clipboard. Save the photos so you can attach them yourself?'))await savePhotos(fl);else if(!navigator.share)toast('Report copied to clipboard');return}const both={title:ttl,text,files:fl},only={title:ttl,files:fl};if(canShareData(both)){toastPick();const r=await tryShare(both);await copyP;if(r==='ok'||r==='abort')return}if(canShareData(only)){toastPick();const r=await tryShare(only);await copyP;if(r==='ok'||r==='abort')return}await copyP;if(confirm('This device cannot attach photos through the share sheet. The report is on the clipboard. Save the photos so you can attach them yourself?'))await savePhotos(fl)}
 function showReport(r,ph){last=r;lastPhotos=ph||[];$('out').textContent=r;$('out').hidden=$('acts').hidden=$('rlogo').hidden=false;$('phint').hidden=!lastPhotos.length}
 let last='';function gen(){showReport(report(),photos.slice());
-const h=getHist();if(!h[0]||h[0].text!==last){const id=Date.now();h.unshift({id,text:last,n:photos.length});if(photos.length)idb('put','r'+id,photos.slice()).catch(()=>{});h.splice(50).forEach(o=>idb('del','r'+o.id).catch(()=>{}));localStorage.methane_hist=JSON.stringify(h)}hist();$('out').scrollIntoView({behavior:'smooth'})}
+const h=getHist();if(!h[0]||h[0].text!==last){const id=Date.now();h.unshift({id,text:last,n:photos.length,tags:tags.slice()});if(photos.length)idb('put','r'+id,photos.slice()).catch(()=>{});h.splice(50).forEach(o=>idb('del','r'+o.id).catch(()=>{}));localStorage.methane_hist=JSON.stringify(h)}hist();$('out').scrollIntoView({behavior:'smooth'})}
 $('gen').onclick=gen;
 function getHist(){try{return JSON.parse(localStorage.methane_hist||'[]').map((r,i)=>typeof r=='string'?{id:i,text:r,n:0}:r)}catch(e){return[]}}
 function hist(){const h=getHist();$('hist').innerHTML=h.length?'':'<i>No saved reports</i>';
@@ -292,8 +305,95 @@ else url='https://teams.microsoft.com/l/chat/0/0?users='+t.split(/[,;\s]+/).filt
 alert('Report copied. Teams will open — paste if the message is not pre-filled.');location.href=url};
 const PH={M:'Mike',E:'Echo',T:'Tango',H:'Hotel',A:'Alpha',N:'November'};
 $('read').onclick=()=>{if(speechSynthesis.speaking){speechSynthesis.cancel();return}
-const parts=last.split('\n').map(l=>l.replace(/^([MEHTAN]) - /,(m,a)=>PH[a]+'. ').replace(/\bP([123])\b/g,'Priority $1').replace(/\bDEAD\b/,'dead').replace(/\(injured (\d+), total persons (\d+)\)/,'. Injured $1. Total persons $2').replace(/\//g,', ').replace(/^SUMMARY \/ UPDATES:/,'Summary and updates.').replace(/^PHOTOS:/,'Photos.').replace(/\[(\d\d):(\d\d)\]/g,'at $1$2 hours,').replace(/\bat (\d\d):(\d\d)(?=,|$)/,'at $1$2 hours').replace(/DTG:/,'Date time group.').replace(/https?:\S+/g,'').replace(/(\d)(?=\d)/g,'$1 '));
+const speech=last.replace(/\n    TRIAGE TAGS:([^\n]*)(?:\n    (?:RED|YELLOW|GREEN|BLACK|WHITE):[^\n]*)*/,'\nTRIAGE TAGS:$1');
+const parts=speech.split('\n').map(l=>l.replace(/^([MEHTAN]) - /,(m,a)=>PH[a]+'. ').replace(/\bP([123])\b/g,'Priority $1').replace(/\bDEAD\b/,'dead').replace(/\(injured (\d+), total persons (\d+)\)/,'. Injured $1. Total persons $2').replace(/\//g,', ').replace(/^SUMMARY \/ UPDATES:/,'Summary and updates.').replace(/^PHOTOS:/,'Photos.').replace(/^TRIAGE TAGS:\s*/,'Triage tags. ').replace(/not decon'?d/gi,'not decontaminated').replace(/\[(\d\d):(\d\d)\]/g,'at $1$2 hours,').replace(/\bat (\d\d):(\d\d)(?=,|$)/,'at $1$2 hours').replace(/DTG:/,'Date time group.').replace(/https?:\S+/g,'').replace(/(\d)(?=\d)/g,'$1 '));
 parts.forEach((p,i)=>{const u=new SpeechSynthesisUtterance(p+(i<parts.length-1?'. Break.':'. Out.'));u.lang='en-GB';u.rate=.8;speechSynthesis.speak(u)})};
+
+// ---------- triage tags / scanner ----------
+function fmtT(ms){const d=new Date(ms),p=x=>String(x).padStart(2,'0');return p(d.getHours())+':'+p(d.getMinutes())}
+function taggedCount(k){return tags.filter(t=>t.colour===k).length}
+function normTag(raw){let s=String(raw||'').trim().toUpperCase().replace(/^\]C[0-9]/,'');const compact=s.replace(/[^A-Z0-9]/g,'');if(/^[A-Z0-9]{3,12}$/.test(compact))return compact;const m=s.match(/[A-Z0-9]{3,12}/);return m?m[0]:''}
+function syncCasFromTags(opts){const quiet=opts&&opts.quiet;TRI.forEach(([k])=>{const n=taggedCount(k),el=$(k),cur=+el.value||0,prev=syncCasFromTags._prev&&syncCasFromTags._prev[k];
+if(!quiet){if(cur<n)el.value=n;else if(prev!=null&&cur===prev&&n<prev)el.value=n}
+el.min=n;const sub=$('tc_'+k);if(sub)sub.textContent=n?('tagged '+n):''});
+syncCasFromTags._prev=Object.fromEntries(TRI.map(([k])=>[k,taggedCount(k)]));if(!quiet)save()}
+function tagBlock(){if(!tags.length)return'';const nd=tags.filter(t=>t.decon).length;const lines=['    TRIAGE TAGS: '+tags.length+' tagged'+(nd?', '+nd+" not decon'd":'')];
+TRI.forEach(([k,l])=>{const g=tags.filter(t=>t.colour===k);if(!g.length)return;lines.push('    '+l.toUpperCase()+': '+g.map(t=>{let s=t.id+' at '+fmtT(t.t);if(t.tColour&&t.tColour!==t.t)s+=' (retriage '+fmtT(t.tColour)+')';if(t.decon)s+=", not decon'd";return s}).join('; '))});return '\n'+lines.join('\n')}
+function drawTags(){const box=$('taglist');if(!box)return;box.innerHTML='';if(!tags.length)return;
+const head=document.createElement('div');head.className='h';head.textContent='Scanned tags ('+tags.length+')';box.append(head);
+const order={red:0,yellow:1,green:2,black:3,white:4};
+tags.slice().sort((a,b)=>(order[a.colour]-order[b.colour])||a.t-b.t).forEach(t=>{
+const row=document.createElement('div');row.className='tagrow';
+const col=document.createElement('span');col.className='tagcol t_'+t.colour;col.textContent=(TRI.find(x=>x[0]===t.colour)||[t.colour,t.colour])[1];
+const mid=document.createElement('div');mid.style.flex='1';
+const id=document.createElement('div');id.className='tagid';id.textContent=t.id;
+const meta=document.createElement('div');meta.className='tagmeta';
+let m='scanned '+fmtT(t.t);if(t.tColour&&t.tColour!==t.t)m+=' · retriage '+fmtT(t.tColour);if(t.decon)m+=" · not decon'd";
+meta.textContent=m;mid.append(id,meta);
+const ch=document.createElement('button');ch.type='button';ch.textContent='Edit';ch.setAttribute('aria-label','Edit tag '+t.id);ch.onclick=()=>openTagPick(t.id,false);
+const del=document.createElement('button');del.type='button';del.textContent='✕';del.setAttribute('aria-label','Delete tag '+t.id);
+del.onclick=()=>{if(!confirm('Remove tag '+t.id+'?'))return;pushUndo();tags=tags.filter(x=>x!==t);drawTags();syncCasFromTags();renderChips()};
+row.append(col,mid,ch,del);box.append(row)})}
+function saveTag(id,colour,decon){pushUndo();const now=Date.now(),i=tags.findIndex(t=>t.id===id);
+if(i>=0){const t=tags[i];if(t.colour!==colour)t.tColour=now;t.colour=colour;t.decon=!!decon}else tags.push({id,colour,decon:!!decon,t:now,tColour:now});
+drawTags();syncCasFromTags();renderChips();toast('Saved '+id+' · '+(TRI.find(x=>x[0]===colour)||[,'?'])[1])}
+function openTagPick(id,resume){const existing=tags.find(t=>t.id===id),m=$('tagpick'),b=$('tagpickBox');b.innerHTML='';
+const h=document.createElement('h3');h.textContent=existing?('Tag '+id+' already scanned — update if needed'):('Tag '+id);b.append(h);
+let colour=existing?existing.colour:'',decon=existing?!!existing.decon:false;
+const row=document.createElement('div');row.className='crow';const colBtns=[];
+TRI.forEach(([k,l])=>{const btn=document.createElement('button');btn.type='button';btn.className='t_'+k+(colour===k?' on':'');btn.textContent=l;
+btn.onclick=()=>{colour=k;colBtns.forEach(x=>x.classList.remove('on'));btn.classList.add('on')};colBtns.push(btn);row.append(btn)});
+b.append(row);
+const tog=document.createElement('button');tog.type='button';tog.className='decon'+(decon?' on':'');tog.textContent=decon?"☑ Not decon'd":"☐ Not decon'd";
+tog.onclick=()=>{decon=!decon;tog.classList.toggle('on',decon);tog.textContent=decon?"☑ Not decon'd":"☐ Not decon'd"};b.append(tog);
+const act=document.createElement('div');act.className='row';const sv=mkBtn('Save','p'),cn=mkBtn('Cancel');
+sv.onclick=()=>{if(!colour){toast('Pick a triage colour');return}saveTag(id,colour,decon);m.hidden=true;if(resume&&scanRun)resumeScan(id)};
+cn.onclick=()=>{m.hidden=true;if(resume&&scanRun)resumeScan(id)};
+act.append(sv,cn);b.append(act);m.hidden=false}
+function promptTagId(resume){const m=$('tagpick'),b=$('tagpickBox');b.innerHTML='';
+b.append(el('h3',{textContent:'Type tag number'}));
+const inp=el('input',{value:'',placeholder:'e.g. 0394XM',autocomplete:'off',spellcheck:false});inp.setAttribute('autocapitalize','characters');inp.setAttribute('autocorrect','off');b.append(inp);
+const act=el('div',{className:'row'}),ok=mkBtn('Next','p'),cn=mkBtn('Cancel');
+const go=()=>{const id=normTag(inp.value);if(!id||id.length<3){toast('Enter the tag ID printed under the barcode');return}openTagPick(id,resume)};
+ok.onclick=go;inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go()}};
+cn.onclick=()=>{m.hidden=true;if(resume&&scanRun)resumeScan('')};
+act.append(ok,cn);b.append(act);m.hidden=false;setTimeout(()=>inp.focus(),80)}
+function scanBeep(){try{const ac=new(window.AudioContext||window.webkitAudioContext)(),o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=880;g.gain.value=.08;o.connect(g);g.connect(ac.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.12);o.stop(ac.currentTime+.13);setTimeout(()=>ac.close(),300)}catch(e){}try{navigator.vibrate&&navigator.vibrate(80)}catch(e){}}
+let zxingP=null,scanStream=null,scanRun=false,scanPaused=false,scanEngine=null,scanIgnore='',scanIgnoreUntil=0,torchOn=false;
+function loadZXing(){if(window.ZXing)return Promise.resolve(window.ZXing);if(zxingP)return zxingP;
+zxingP=new Promise((ok,no)=>{const s=document.createElement('script');s.src='vendor/zxing.min.js';s.onload=()=>window.ZXing?ok(window.ZXing):no(new Error('ZXing missing'));s.onerror=()=>no(new Error('ZXing failed to load'));document.head.appendChild(s)}).catch(e=>{zxingP=null;throw e});return zxingP}
+async function makeDetector(){if(typeof BarcodeDetector==='function'){try{const want=['code_128','code_39','code_93','codabar','ean_13','ean_8','upc_a','upc_e','itf'];let fm=want;if(typeof BarcodeDetector.getSupportedFormats==='function'){const sup=await BarcodeDetector.getSupportedFormats();fm=want.filter(f=>sup.includes(f))}if(fm.length)return{kind:'native',det:new BarcodeDetector({formats:fm})}}catch(e){}}
+const Z=await loadZXing();const hints=new Map();hints.set(Z.DecodeHintType.POSSIBLE_FORMATS,[Z.BarcodeFormat.CODE_128,Z.BarcodeFormat.CODE_39,Z.BarcodeFormat.CODE_93,Z.BarcodeFormat.CODABAR,Z.BarcodeFormat.ITF,Z.BarcodeFormat.EAN_13,Z.BarcodeFormat.EAN_8,Z.BarcodeFormat.UPC_A,Z.BarcodeFormat.UPC_E]);hints.set(Z.DecodeHintType.TRY_HARDER,true);const reader=new Z.MultiFormatReader();reader.setHints(hints);return{kind:'zxing',Z,reader}}
+async function detectFrame(engine,video){if(engine.kind==='native'){try{const codes=await engine.det.detect(video);if(codes&&codes.length&&codes[0].rawValue)return codes[0].rawValue}catch(e){}return null}
+const w=video.videoWidth,h=video.videoHeight;if(!w)return null;const c=detectFrame.canvas||(detectFrame.canvas=document.createElement('canvas'));
+const band=Math.max(90,Math.round(h*.4));c.width=w;c.height=band;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(video,0,(h-band)/2,w,band,0,0,w,band);
+try{const src=new engine.Z.HTMLCanvasElementLuminanceSource(c),bmp=new engine.Z.BinaryBitmap(new engine.Z.HybridBinarizer(src)),r=engine.reader.decode(bmp);try{engine.reader.reset()}catch(e){}return r?r.getText():null}catch(e){try{engine.reader.reset()}catch(x){}
+if(!detectFrame.full){detectFrame.full=true;c.height=h;ctx.drawImage(video,0,0,w,h,0,0,w,h);try{const src=new engine.Z.HTMLCanvasElementLuminanceSource(c),bmp=new engine.Z.BinaryBitmap(new engine.Z.HybridBinarizer(src)),r=engine.reader.decode(bmp);try{engine.reader.reset()}catch(e){}return r?r.getText():null}catch(e2){try{engine.reader.reset()}catch(x){}}}else detectFrame.full=false;return null}}
+async function scanLoop(){if(!scanRun||$('scanov').hidden)return;const v=$('scanvid');
+if(!scanPaused&&scanEngine&&v.readyState>=2){const raw=await detectFrame(scanEngine,v),id=normTag(raw);
+if(id&&!(id===scanIgnore&&Date.now()<scanIgnoreUntil)){scanPaused=true;scanBeep();$('scanstat').textContent='Tag '+id;openTagPick(id,true);return}}
+setTimeout(scanLoop,scanEngine&&scanEngine.kind==='zxing'?130:80)}
+function resumeScan(lastId){scanIgnore=lastId||'';scanIgnoreUntil=Date.now()+1500;scanPaused=false;$('scanstat').textContent='Point at the barcode on the tag';if(scanRun&&!$('scanov').hidden)scanLoop()}
+function closeScanner(){scanRun=false;scanPaused=true;scanEngine=null;if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null}const v=$('scanvid');try{v.pause()}catch(e){}v.srcObject=null;$('scanov').hidden=true;$('scanflash').classList.remove('on');$('scanflash').hidden=true;torchOn=false;$('tagpick').hidden=true}
+async function openScanner(){$('scanov').hidden=false;$('scanstat').textContent='Starting camera…';$('scanflash').hidden=true;torchOn=false;scanPaused=false;scanRun=false;
+try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){const err=new Error('No camera API');err.name='NotFoundError';throw err}
+scanStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});
+const v=$('scanvid');v.srcObject=scanStream;await v.play();
+const track=scanStream.getVideoTracks()[0],caps=(track.getCapabilities&&track.getCapabilities())||{};$('scanflash').hidden=!caps.torch;
+try{scanEngine=await makeDetector()}catch(e){$('scanstat').textContent='Scanner unavailable — type the tag number instead.';return}
+$('scanstat').textContent='Point at the barcode on the tag';scanRun=true;scanLoop()}
+catch(e){const denied=e&&(e.name==='NotAllowedError'||e.name==='PermissionDeniedError');const miss=e&&(e.name==='NotFoundError'||e.name==='DevicesNotFoundError'||e.name==='OverconstrainedError');
+$('scanstat').textContent=denied?'Camera permission denied. You can type the tag number instead.':miss?'No camera found. You can type the tag number instead.':('Camera error: '+(e&&(e.message||e.name)||'unknown')+'. You can type the tag number instead.')}}
+$('scanflash').onclick=async()=>{if(!scanStream)return;const track=scanStream.getVideoTracks()[0];try{torchOn=!torchOn;await track.applyConstraints({advanced:[{torch:torchOn}]});$('scanflash').classList.toggle('on',torchOn)}catch(e){torchOn=false;$('scanflash').hidden=true}};
+$('scanmanual').onclick=()=>{scanPaused=true;promptTagId(true)};
+$('scanclose').onclick=closeScanner;
+$('scantag').onclick=openScanner;
+$('typetag').onclick=()=>promptTagId(false);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&scanRun)closeScanner()});
+TRI.forEach(([k])=>$(k).addEventListener('change',()=>{const n=taggedCount(k);if((+$(k).value||0)<n)$(k).value=n;save()}));
+if(draftTags){tags=draftTags.filter(t=>t&&typeof t==='object'&&t.id&&TRI.some(x=>x[0]===t.colour)).map(t=>({id:normTag(t.id)||String(t.id).toUpperCase(),colour:t.colour,decon:!!t.decon,t:+t.t||Date.now(),tColour:+t.tColour||+t.t||Date.now()}))}
+drawTags();syncCasFromTags();
+
 // ---------- settings UI ----------
 let draftSet=null;
 function el(tag,props,...kids){const e=document.createElement(tag);Object.assign(e,props||{});kids.forEach(k=>e.append(k));return e}
@@ -335,7 +435,7 @@ function openSettings(){draftSet=clone(SET);renderSettings();$('settings').hidde
 function closeSettings(){$('settings').hidden=true}
 $('gear').onclick=openSettings;
 renderChips();if(location.hash=='#settings')openSettings();else if(location.hash=='#guided')setTimeout(()=>$('guided').click(),300);
-const APPV='v16',FB='https://signal.group/#CjQKIFLsCHEn62HKd1--KiGSXDdz94M8Z9DSjlp5xroEIL6gEhCn0m5ijXSByL6rE2War5RU';
+const APPV='v17',FB='https://signal.group/#CjQKIFLsCHEn62HKd1--KiGSXDdz94M8Z9DSjlp5xroEIL6gEhCn0m5ijXSByL6rE2War5RU';
 function fbBlock(){const w=document.createElement('div');w.style.cssText='margin:20px 0 8px;text-align:center';const a=document.createElement('a');a.href=FB;a.target='_blank';a.rel='noopener';a.textContent='💬 Feedback / Report a bug';a.style.cssText='display:block;padding:16px;border:2px solid #ffd600;border-radius:12px;background:#222;color:#ffd600;font-weight:800;text-decoration:none;font-size:19px';const h=document.createElement('div');h.className='hint';h.textContent='Opens the EPSO pilot Signal group';w.append(a,h);return w}
 document.body.appendChild(fbBlock());
 (function(){const t=document.createElement('div');t.id='ver';t.textContent='METHANE Sitrep '+APPV;t.style.cssText='text-align:center;color:#777;font-size:13px;margin:16px 0';document.body.appendChild(t);
