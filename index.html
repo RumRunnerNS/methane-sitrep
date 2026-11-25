@@ -50,13 +50,13 @@ pre{white-space:pre-wrap;background:#111;border:2px solid #fff;padding:10px;bord
 <form id="form" onsubmit="return false"></form>
 <div class="f" id="f_photos"><label><b>📷</b>Photos</label><div class="h">Camera or gallery. Stored on this device only.</div>
 <input type="file" id="photocam" accept="image/*" capture="environment" hidden><input type="file" id="photoin" accept="image/*" multiple hidden>
-<div class="row"><button type="button" id="camph">📷 Take photo</button><button type="button" id="addph">🖼️ Choose from gallery</button></div><div class="thumbs" id="thumbs"></div></div>
+<div class="row"><button type="button" id="camph">📷 Take photo</button><button type="button" id="addph">🖼️ Choose from gallery</button></div><div class="row" id="saverow" hidden><button type="button" id="saveph">💾 Save photos</button></div><div class="thumbs" id="thumbs"></div></div>
 <div class="row"><button class="p" id="gen">Generate report</button></div>
 <div class="rlogo" id="rlogo" hidden><span class="emb"><img src="epso-emblem.svg" alt=""></span><img class="ehs" src="ehs-logo.webp" alt=""></div><pre id="out" hidden></pre>
 <div class="row" id="acts" hidden>
 <button id="share">📤 Share</button><button id="sms">💬 SMS</button><button id="email">✉️ Email</button>
 <button id="teams">Teams</button><button id="read">🔊 Read aloud</button><button id="copy">📋 Copy</button></div>
-<div class="hint" id="phint" hidden>📷 Photos attach only via <b>Share</b>; SMS, Email and Teams send text only.</div>
+<div class="hint" id="phint" hidden>📷 Photos go with the report when you use <b>Share</b>, <b>SMS</b>, <b>Email</b> or <b>Teams</b> — pick that app in the share sheet. The report is copied so you can paste it if the text is missing. Use <b>Save photos</b> to download them and attach them yourself if needed.</div>
 <h2>History</h2><div class="hist" id="hist"></div>
 <div id="chips" hidden><div id="chipTitle"></div><div id="chipLive"></div><div class="chiprow" id="chipTargets"></div><div class="chiprow" id="chipBody"></div><div class="chiprow" id="chipNav"></div></div>
 <div id="settings" class="ov" hidden></div>
@@ -242,14 +242,19 @@ async function idb(m,k,v){const d=await db;return new Promise((ok,no)=>{const t=
 function shrink(f){return new Promise(ok=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>ok(b),'image/jpeg',.7)};im.onerror=()=>{URL.revokeObjectURL(u);ok(null)};im.src=u})}
 function thumbs(el,list,rm){el.innerHTML='';list.forEach((b,i)=>{const sp=document.createElement('span'),im=document.createElement('img');im.src=URL.createObjectURL(b);im.alt='photo '+(i+1);im.onclick=()=>window.open(im.src);sp.appendChild(im);
 if(rm){const x=document.createElement('button');x.type='button';x.textContent='✕';x.setAttribute('aria-label','Remove photo');x.onclick=()=>rm(i);sp.appendChild(x)}el.appendChild(sp)})}
-function drawDraft(){thumbs($('thumbs'),photos,i=>{photos.splice(i,1);idb('put','draft',photos);drawDraft()})}
+function drawDraft(){thumbs($('thumbs'),photos,i=>{photos.splice(i,1);idb('put','draft',photos);drawDraft()});$('saverow').hidden=!photos.length}
 idb('get','draft').then(p=>{photos=p||[];drawDraft()}).catch(()=>{});
 $('addph').onclick=()=>$('photoin').click();
 $('camph').onclick=()=>$('photocam').click();
 const onPick=async e=>{const fl=[...e.target.files];e.target.value='';for(const f of fl){const b=await shrink(f);if(b)photos.push(b)}idb('put','draft',photos).catch(()=>{});drawDraft()};
 $('photoin').onchange=onPick;$('photocam').onchange=onPick;
 $('addupd').onclick=()=>{pushUndo();const d=new Date(),t=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'),el=$('sum');el.value=(el.value?el.value+'\n':'')+`[${t}] `;el.focus();el.setSelectionRange(el.value.length,el.value.length);save()};
-function files(list){return list.map((b,i)=>new File([b],`methane-photo-${i+1}.jpg`,{type:'image/jpeg'}))}
+function files(list){return (list||[]).filter(Boolean).map((b,i)=>new File([b],`methane-photo-${i+1}.jpg`,{type:'image/jpeg'}))}
+function canShareData(dt){if(!navigator.share)return false;if(typeof navigator.canShare!=='function')return true;try{return!!navigator.canShare(dt)}catch(e){return false}}
+function isAbort(e){return!!(e&&e.name==='AbortError')}
+async function savePhotos(list){const fl=files(list&&list.length?list:photos);if(!fl.length){toast('No photos to save');return}for(const f of fl){const a=document.createElement('a'),u=URL.createObjectURL(f);a.href=u;a.download=f.name;a.rel='noopener';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);if(fl.length>1)await new Promise(r=>setTimeout(r,350))}toast(fl.length===1?'Photo saved to Downloads':fl.length+' photos saved to Downloads')}
+async function copyText(s){const t=s==null?last:s;try{await navigator.clipboard.writeText(t);return true}catch(e){const el=document.createElement('textarea');el.value=t;document.body.appendChild(el);el.select();document.execCommand('copy');el.remove();return true}}
+async function shareFiles(text,fl,pickMsg,title){const copyP=copyText(text),ttl=title||'METHANE Sitrep',toastPick=()=>toast(pickMsg||'Report copied — pick your app and paste if the text is missing.'),tryShare=async dt=>{try{await navigator.share(dt);return'ok'}catch(e){return isAbort(e)?'abort':'fail'}};if(!navigator.share||!fl.length){await copyP;if(fl.length&&confirm('This device cannot attach photos through the share sheet. The report is on the clipboard. Save the photos so you can attach them yourself?'))await savePhotos(fl);else if(!navigator.share)toast('Report copied to clipboard');return}const both={title:ttl,text,files:fl},only={title:ttl,files:fl};if(canShareData(both)){toastPick();const r=await tryShare(both);await copyP;if(r==='ok'||r==='abort')return}if(canShareData(only)){toastPick();const r=await tryShare(only);await copyP;if(r==='ok'||r==='abort')return}await copyP;if(confirm('This device cannot attach photos through the share sheet. The report is on the clipboard. Save the photos so you can attach them yourself?'))await savePhotos(fl)}
 function showReport(r,ph){last=r;lastPhotos=ph||[];$('out').textContent=r;$('out').hidden=$('acts').hidden=$('rlogo').hidden=false;$('phint').hidden=!lastPhotos.length}
 let last='';function gen(){showReport(report(),photos.slice());
 const h=getHist();if(!h[0]||h[0].text!==last){const id=Date.now();h.unshift({id,text:last,n:photos.length});if(photos.length)idb('put','r'+id,photos.slice()).catch(()=>{});h.splice(50).forEach(o=>idb('del','r'+o.id).catch(()=>{}));localStorage.methane_hist=JSON.stringify(h)}hist();$('out').scrollIntoView({behavior:'smooth'})}
@@ -269,16 +274,17 @@ const r=document.createElement('div');r.className='row';const ok=mkBtn('Send','p
 const close=v=>{m.hidden=true;res(v)};ok.onclick=()=>close(ins.map((c,i)=>c.checked?i:-1).filter(i=>i>=0));none.onclick=()=>close([]);cn.onclick=()=>close(null);
 r.append(ok,none,cn);b.append(r);m.hidden=false})}
 async function choose(list,title,label,multi,isDef){if(!list.length)return[];if(list.length==1)return[0];return pick(title,list.map(label),multi,list.map(isDef))}
-$('share').onclick=async()=>{if(navigator.share){const fl=files(lastPhotos),dt={title:'METHANE Sitrep',text:last};if(fl.length&&navigator.canShare&&navigator.canShare({files:fl}))dt.files=fl;else if(fl.length)alert('This browser cannot share photos; sending text only.');try{await navigator.share(dt)}catch(e){}}else{copy();alert('Share not supported; copied to clipboard')}};
-$('sms').onclick=async()=>{const L=SET.sms.filter(o=>o.number&&o.number.trim());const sel=await choose(L,'Send SMS to…',o=>`${o.name||'(no name)'} – ${o.number}`,true,o=>o.def=='1');if(sel==null)return;
-const nums=sel.map(i=>L[i].number.replace(/[^\d+]/g,'')).join(',');const body=(SET.smsPrefix?SET.smsPrefix.trim()+'\n':'')+last;
+$('saveph').onclick=()=>savePhotos(photos);
+$('share').onclick=async()=>{const fl=files(lastPhotos);if(fl.length){await shareFiles(last,fl,'Report copied — pick an app and paste if the text is missing.');return}if(navigator.share){try{await navigator.share({title:'METHANE Sitrep',text:last})}catch(e){}}else{await copy();alert('Share not supported; copied to clipboard')}};
+$('sms').onclick=async()=>{const body=(SET.smsPrefix?SET.smsPrefix.trim()+'\n':'')+last;if(lastPhotos.length){await shareFiles(body,files(lastPhotos),'Report copied — pick Messages and paste if the text is missing.');return}const L=SET.sms.filter(o=>o.number&&o.number.trim());const sel=await choose(L,'Send SMS to…',o=>`${o.name||'(no name)'} – ${o.number}`,true,o=>o.def=='1');if(sel==null)return;
+const nums=sel.map(i=>L[i].number.replace(/[^\d+]/g,'')).join(',');
 location.href='sms:'+nums+(isIOS?'&':'?')+'body='+enc(body)};
-$('email').onclick=async()=>{const L=SET.email.filter(o=>o.address&&o.address.trim());const sel=await choose(L,'Email to…',o=>`${o.name||o.address} <${o.address}>${o.role?' · default '+o.role.toUpperCase():''}`,true,o=>!!o.role);if(sel==null)return;
+$('email').onclick=async()=>{const subj='METHANE SITREP '+($('callsign').value||'');if(lastPhotos.length){await shareFiles(last,files(lastPhotos),'Report copied — pick your mail app and paste if the text is missing.',subj);return}const L=SET.email.filter(o=>o.address&&o.address.trim());const sel=await choose(L,'Email to…',o=>`${o.name||o.address} <${o.address}>${o.role?' · default '+o.role.toUpperCase():''}`,true,o=>!!o.role);if(sel==null)return;
 const to=sel.filter(i=>L[i].role!='cc').map(i=>L[i].address.trim()),cc=sel.filter(i=>L[i].role=='cc').map(i=>L[i].address.trim());
-location.href='mailto:'+to.map(enc).join(',')+'?'+(cc.length?'cc='+cc.map(enc).join(',')+'&':'')+'subject='+enc('METHANE SITREP '+($('callsign').value||''))+'&body='+enc(last)};
-async function copy(){try{await navigator.clipboard.writeText(last);return true}catch(e){const t=document.createElement('textarea');t.value=last;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();return true}}
+location.href='mailto:'+to.map(enc).join(',')+'?'+(cc.length?'cc='+cc.map(enc).join(',')+'&':'')+'subject='+enc(subj)+'&body='+enc(last)};
+async function copy(){return copyText(last)}
 $('copy').onclick=async()=>{await copy();$('copy').textContent='✅ Copied';setTimeout(()=>$('copy').textContent='📋 Copy',1500)};
-$('teams').onclick=async()=>{const L=SET.teams.filter(o=>o.target&&o.target.trim());const sel=await choose(L,'Send to Teams…',o=>o.name||o.target,false,(o,i)=>i==0);if(sel==null)return;
+$('teams').onclick=async()=>{if(lastPhotos.length){await shareFiles(last,files(lastPhotos),'Report copied — pick Teams and paste if the text is missing.');return}const L=SET.teams.filter(o=>o.target&&o.target.trim());const sel=await choose(L,'Send to Teams…',o=>o.name||o.target,false,(o,i)=>i==0);if(sel==null)return;
 await copy();let url;const t=sel.length?L[sel[0]].target.trim():'';
 if(/\/l\/(channel|team)\//i.test(t)){toast('Report copied — paste into the channel');setTimeout(()=>{location.href=t},1200);return}
 if(/^https?:\/\//i.test(t))url=t+(t.includes('?')?'&':'?')+'message='+enc(last);
@@ -329,7 +335,7 @@ function openSettings(){draftSet=clone(SET);renderSettings();$('settings').hidde
 function closeSettings(){$('settings').hidden=true}
 $('gear').onclick=openSettings;
 renderChips();if(location.hash=='#settings')openSettings();else if(location.hash=='#guided')setTimeout(()=>$('guided').click(),300);
-const APPV='v15',FB='https://signal.group/#CjQKIFLsCHEn62HKd1--KiGSXDdz94M8Z9DSjlp5xroEIL6gEhCn0m5ijXSByL6rE2War5RU';
+const APPV='v16',FB='https://signal.group/#CjQKIFLsCHEn62HKd1--KiGSXDdz94M8Z9DSjlp5xroEIL6gEhCn0m5ijXSByL6rE2War5RU';
 function fbBlock(){const w=document.createElement('div');w.style.cssText='margin:20px 0 8px;text-align:center';const a=document.createElement('a');a.href=FB;a.target='_blank';a.rel='noopener';a.textContent='💬 Feedback / Report a bug';a.style.cssText='display:block;padding:16px;border:2px solid #ffd600;border-radius:12px;background:#222;color:#ffd600;font-weight:800;text-decoration:none;font-size:19px';const h=document.createElement('div');h.className='hint';h.textContent='Opens the EPSO pilot Signal group';w.append(a,h);return w}
 document.body.appendChild(fbBlock());
 (function(){const t=document.createElement('div');t.id='ver';t.textContent='METHANE Sitrep '+APPV;t.style.cssText='text-align:center;color:#777;font-size:13px;margin:16px 0';document.body.appendChild(t);
