@@ -1,4 +1,4 @@
-const V='v17',C='methane-'+V,A=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./epso-emblem.webp','./epso-emblem.svg','./epso-emblem.png','./ehs-logo.webp','./ehs-logo.png','./vendor/zxing.min.js'];
+const V='v18',C='methane-'+V,A=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./epso-emblem.webp','./epso-emblem.svg','./epso-emblem.png','./ehs-logo.webp','./ehs-logo.png','./vendor/zxing.min.js'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(A.map(u=>new Request(u,{cache:'reload'})))))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 self.addEventListener('message',e=>{if(e.data==='version')e.source&&e.source.postMessage({version:V})});

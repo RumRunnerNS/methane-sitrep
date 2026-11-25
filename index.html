@@ -20,10 +20,10 @@ button.p{background:#b00020;border-color:#ff5252}button.on{background:#ffd600;co
 textarea,input,select{width:100%;background:#111;color:#fff;border:2px solid #666;padding:10px;min-height:52px}
 .cas{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.cas div{text-align:center;font-weight:800;border-radius:10px;padding:4px 3px;font-size:15px}.cas input{text-align:center;font-size:22px;font-weight:800;padding:6px 2px}
 .cas small.tc{display:block;font-size:11px;font-weight:700;line-height:1.2;min-height:14px;opacity:.95}
-.t_red{background:#d50000}.t_yellow{background:#ffd600;color:#000}.t_green{background:#00a843}.t_black{background:#000;border:2px solid #fff}.t_white{background:#fff;color:#000}.cas .t_yellow input,.cas .t_white input{background:#fff;color:#000;border-color:#000}
-#taglist{margin-top:8px}.tagrow{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #444}.tagid{font-weight:800;font-size:18px;letter-spacing:.06em}.tagmeta{color:#bbb;font-size:14px}.tagcol{display:inline-block;padding:6px 8px;border-radius:8px;font-weight:800;min-width:64px;text-align:center;flex:none}.tagrow button{flex:none;min-height:44px;padding:8px 10px}.tagrow button:last-child{width:48px;padding:0}
-#scanov{position:fixed;inset:0;background:#000;z-index:60;display:flex;flex-direction:column}#scanov[hidden]{display:none!important}#scanstage{position:relative;flex:1;min-height:0}#scanvid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}#scanframe{position:absolute;left:8%;right:8%;top:28%;height:22%;border:3px solid #ffd600;border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.35);pointer-events:none}#scanbar{position:relative;padding:10px 10px calc(12px + env(safe-area-inset-bottom));background:#111}#scanstat{font-weight:800;margin:0 0 8px;text-align:center}
-#tagpick{z-index:70}#tagpick .crow{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0}#tagpick .crow button{min-height:56px;padding:6px 4px;font-size:15px}#tagpick .decon{width:100%;margin:8px 0}
+.t_red{background:#d50000}.t_yellow{background:#ffd600;color:#000}.t_green{background:#00a843}.t_black{background:#000;border:2px solid #fff}.t_white{background:#fff;color:#000}.t_unknown{background:#5a5a5a;color:#fff;border:2px solid #9e9e9e}.cas .t_yellow input,.cas .t_white input{background:#fff;color:#000;border-color:#000}
+#taglist{margin-top:8px}#tagsum{margin-top:8px;color:#ffd600;font-weight:800}#tagsum[hidden]{display:none!important}.tagrow{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #444}.tagid{font-weight:800;font-size:18px;letter-spacing:.06em}.tagmeta{color:#bbb;font-size:14px}.tagcol{display:inline-block;padding:6px 8px;border-radius:8px;font-weight:800;min-width:72px;text-align:center;flex:none}.tagrow button{flex:none;min-height:44px;padding:8px 10px}.tagrow button:last-child{width:48px;padding:0}
+#scanov{position:fixed;inset:0;background:#000;z-index:60;display:flex;flex-direction:column}#scanov[hidden]{display:none!important}#scanstage{position:relative;flex:1;min-height:0}#scanvid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}#scanframe{position:absolute;left:6%;right:6%;top:16%;height:50%;border:3px solid #ffd600;border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.35);pointer-events:none}#scanbar{position:relative;padding:10px 10px calc(12px + env(safe-area-inset-bottom));background:#111}#scanstat{font-weight:800;margin:0 0 8px;text-align:center}#scanfound{max-height:22vh;overflow:auto;margin:0 0 8px;font-size:15px}.scanitem{padding:4px 0;border-bottom:1px solid #333}.scannew{color:#ffd600;font-weight:800}.scandup{color:#bbb}
+#tagpick{z-index:70}#tagpick .crow{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}#tagpick .crow button{min-height:56px;padding:6px 4px;font-size:15px}#tagpick .decon{width:100%;margin:8px 0}
 #live{min-height:40px;background:#111;border:1px dashed #666;padding:8px;border-radius:10px;color:#ffd600}
 pre{white-space:pre-wrap;background:#111;border:2px solid #fff;padding:10px;border-radius:10px;font-size:17px}
 .thumbs{display:flex;flex-wrap:wrap;gap:8px}.thumbs span{position:relative}.thumbs img{width:84px;height:84px;object-fit:cover;border-radius:8px;border:2px solid #666}.thumbs button{position:absolute;top:-6px;right:-6px;min-height:32px;width:32px;padding:0;border-radius:50%;background:#b00020}
@@ -67,8 +67,9 @@ pre{white-space:pre-wrap;background:#111;border:2px solid #fff;padding:10px;bord
 <div id="modal" class="modal" hidden><div id="modalBox"></div></div>
 <div id="scanov" hidden>
 <div id="scanstage"><video id="scanvid" playsinline muted autoplay></video><div id="scanframe" aria-hidden="true"></div></div>
-<div id="scanbar"><div id="scanstat">Point the camera at the barcode on the tag</div>
-<div class="row"><button type="button" id="scanflash" hidden>🔦 Torch</button><button type="button" id="scanmanual">⌨️ Type tag number</button><button type="button" id="scanclose">Close</button></div></div>
+<div id="scanbar"><div id="scanstat">Point the camera at the barcodes on the tag</div>
+<div id="scanfound" aria-live="polite"></div>
+<div class="row"><button type="button" id="scanflash" hidden>🔦 Torch</button><button type="button" id="scanask">⚡ Rapid scan</button><button type="button" id="scanmanual">⌨️ Type tag number</button><button type="button" id="scanclose">Close</button></div></div>
 </div>
 <div id="tagpick" class="modal" hidden><div id="tagpickBox"></div></div>
 <input type="file" id="setin" accept="application/json,.json" hidden>
@@ -117,7 +118,7 @@ function saveSet(){localStorage[SKEY]=JSON.stringify(SET)}
 const form=$('form');
 form.innerHTML=F.map(([k,id])=>`<div class="f" id="f_${id}"><label><b>${k}</b><span id="lbl_${id}"></span></label><div class="h" id="hint_${id}"></div>`+
 (id=='major'?`<select id="major_s"><option value="">— select —</option><option>MAJOR INCIDENT DECLARED</option><option>MAJOR INCIDENT STANDBY</option><option>NOT DECLARED</option></select><div id="mts" class="mts" hidden><span class="h">Declared / standby at (24h)</span><div class="row"><input type="text" id="m_time" inputmode="numeric" pattern="[0-2][0-9]:[0-5][0-9]" maxlength="5" placeholder="HH:MM" autocomplete="off" spellcheck="false" aria-label="Declaration time (24h)"><input type="date" id="m_date" aria-label="Declaration date"><button type="button" id="m_now">🕒 Now</button></div></div>`:'')+
-(id=='cas'?`<div class="cas">${TRI.map(([k,l])=>`<div class="t_${k}"><span>${l}</span><input type="number" min=0 inputmode=numeric id="${k}" aria-label="${l} count"><small class="tc" id="tc_${k}"></small></div>`).join('')}</div><div class="h">White = uninjured, accounted for. Counts use the higher of the number you type and the number of scanned tags.</div><div class="row"><button type="button" id="scantag">🏷️ Scan triage tag</button><button type="button" id="typetag">⌨️ Type tag number</button></div><div id="taglist"></div>`:'')+
+(id=='cas'?`<div class="cas">${TRI.map(([k,l])=>`<div class="t_${k}"><span>${l}</span><input type="number" min=0 inputmode=numeric id="${k}" aria-label="${l} count"><small class="tc" id="tc_${k}"></small></div>`).join('')}</div><div class="h">White = uninjured, accounted for. Colour counts use the higher of the number you type and tagged of that colour. Tags with unknown colour count toward the total, not a colour.</div><div class="row"><button type="button" id="scantag">🏷️ Scan triage tag</button><button type="button" id="typetag">⌨️ Type tag number</button></div><div id="tagsum" class="h" hidden></div><div id="taglist"></div>`:'')+
 (id=='sum'?`<div class="row"><button type="button" id="addupd">🕒 Add update</button></div>`:'')+(id=='loc'?`<div class="row"><button type="button" id="gps">📍 Use GPS</button></div>`:'')+
 `<textarea id="${id}" rows="2"></textarea></div>`).join('');
 function applyLabels(){FID.forEach(id=>{$('lbl_'+id).textContent=sec(id).label;$('hint_'+id).textContent=sec(id).hint})}applyLabels();
@@ -235,7 +236,7 @@ function mLine(){const v=$('major_s').value,n=$('major').value.trim(),ty=$('type
 let l=/^MAJOR INCIDENT (DECLARED|STANDBY)$/.test(v)?(ty?`M - ${v}: ${ty}${declStr()}`:`M - ${v}${declStr()}`):`M - MAJOR INCIDENT: ${v||'Not known'}`;return l+(n?'\n    '+n:'')}
 function casCounts(){return TRI.map(([k])=>Math.max(+$(k).value||0,taggedCount(k)))}
 function report(){const d=new Date(),pad=x=>String(x).padStart(2,'0'),v=i=>$(i).value.trim()||'Not known';
-const c=casCounts(),alive=c[0]+c[1]+c[2],tot=c.reduce((a,b)=>a+b,0);
+const c=casCounts(),unk=unknownCount(),alive=c[0]+c[1]+c[2],tot=c.reduce((a,b)=>a+b,0)+unk;
 return `METHANE SITREP
 DTG: ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())} (local)
 FROM: ${$('callsign').value.trim()||'Unknown callsign'}
@@ -244,7 +245,7 @@ E - EXACT LOCATION: ${v('loc')}
 T - TYPE OF INCIDENT: ${v('type')}
 H - HAZARDS: ${v('haz')}
 A - ACCESS: ${v('access')}
-N - NUMBER/TYPE OF CASUALTIES: RED ${c[0]} / YELLOW ${c[1]} / GREEN ${c[2]} / BLACK ${c[3]} / WHITE (uninjured, accounted for) ${c[4]} (injured ${alive}, total persons ${tot})${$('cas').value.trim()?'\n    '+$('cas').value.trim():''}${tagBlock()}
+N - NUMBER/TYPE OF CASUALTIES: RED ${c[0]} / YELLOW ${c[1]} / GREEN ${c[2]} / BLACK ${c[3]} / WHITE (uninjured, accounted for) ${c[4]} / UNKNOWN COLOUR ${unk} (injured ${alive}, total persons ${tot})${$('cas').value.trim()?'\n    '+$('cas').value.trim():''}${tagBlock()}
 E - EMERGENCY SERVICES: ${v('es')}
 SUMMARY / UPDATES: ${v('sum')}${photos.length?'\nPHOTOS: '+photos.length+' attached':''}
 END OF REPORT`}
@@ -305,94 +306,124 @@ else url='https://teams.microsoft.com/l/chat/0/0?users='+t.split(/[,;\s]+/).filt
 alert('Report copied. Teams will open — paste if the message is not pre-filled.');location.href=url};
 const PH={M:'Mike',E:'Echo',T:'Tango',H:'Hotel',A:'Alpha',N:'November'};
 $('read').onclick=()=>{if(speechSynthesis.speaking){speechSynthesis.cancel();return}
-const speech=last.replace(/\n    TRIAGE TAGS:([^\n]*)(?:\n    (?:RED|YELLOW|GREEN|BLACK|WHITE):[^\n]*)*/,'\nTRIAGE TAGS:$1');
+const speech=last.replace(/\n    TRIAGE TAGS:([^\n]*)(?:\n    (?:RED|YELLOW|GREEN|BLACK|WHITE|UNKNOWN COLOUR):[^\n]*)*/,'\nTRIAGE TAGS:$1');
 const parts=speech.split('\n').map(l=>l.replace(/^([MEHTAN]) - /,(m,a)=>PH[a]+'. ').replace(/\bP([123])\b/g,'Priority $1').replace(/\bDEAD\b/,'dead').replace(/\(injured (\d+), total persons (\d+)\)/,'. Injured $1. Total persons $2').replace(/\//g,', ').replace(/^SUMMARY \/ UPDATES:/,'Summary and updates.').replace(/^PHOTOS:/,'Photos.').replace(/^TRIAGE TAGS:\s*/,'Triage tags. ').replace(/not decon'?d/gi,'not decontaminated').replace(/\[(\d\d):(\d\d)\]/g,'at $1$2 hours,').replace(/\bat (\d\d):(\d\d)(?=,|$)/,'at $1$2 hours').replace(/DTG:/,'Date time group.').replace(/https?:\S+/g,'').replace(/(\d)(?=\d)/g,'$1 '));
 parts.forEach((p,i)=>{const u=new SpeechSynthesisUtterance(p+(i<parts.length-1?'. Break.':'. Out.'));u.lang='en-GB';u.rate=.8;speechSynthesis.speak(u)})};
 
 // ---------- triage tags / scanner ----------
+const COLS=TRI.concat([['unknown','Unknown']]);
+function colourLabel(c){return (COLS.find(x=>x[0]===c)||[c,c])[1]}
+function isColour(c){return COLS.some(x=>x[0]===c)}
 function fmtT(ms){const d=new Date(ms),p=x=>String(x).padStart(2,'0');return p(d.getHours())+':'+p(d.getMinutes())}
 function taggedCount(k){return tags.filter(t=>t.colour===k).length}
+function unknownCount(){return taggedCount('unknown')}
+function findTag(id){return tags.find(t=>t.id===id)}
 function normTag(raw){let s=String(raw||'').trim().toUpperCase().replace(/^\]C[0-9]/,'');const compact=s.replace(/[^A-Z0-9]/g,'');if(/^[A-Z0-9]{3,12}$/.test(compact))return compact;const m=s.match(/[A-Z0-9]{3,12}/);return m?m[0]:''}
 function syncCasFromTags(opts){const quiet=opts&&opts.quiet;TRI.forEach(([k])=>{const n=taggedCount(k),el=$(k),cur=+el.value||0,prev=syncCasFromTags._prev&&syncCasFromTags._prev[k];
 if(!quiet){if(cur<n)el.value=n;else if(prev!=null&&cur===prev&&n<prev)el.value=n}
 el.min=n;const sub=$('tc_'+k);if(sub)sub.textContent=n?('tagged '+n):''});
-syncCasFromTags._prev=Object.fromEntries(TRI.map(([k])=>[k,taggedCount(k)]));if(!quiet)save()}
-function tagBlock(){if(!tags.length)return'';const nd=tags.filter(t=>t.decon).length;const lines=['    TRIAGE TAGS: '+tags.length+' tagged'+(nd?', '+nd+" not decon'd":'')];
-TRI.forEach(([k,l])=>{const g=tags.filter(t=>t.colour===k);if(!g.length)return;lines.push('    '+l.toUpperCase()+': '+g.map(t=>{let s=t.id+' at '+fmtT(t.t);if(t.tColour&&t.tColour!==t.t)s+=' (retriage '+fmtT(t.tColour)+')';if(t.decon)s+=", not decon'd";return s}).join('; '))});return '\n'+lines.join('\n')}
-function drawTags(){const box=$('taglist');if(!box)return;box.innerHTML='';if(!tags.length)return;
-const head=document.createElement('div');head.className='h';head.textContent='Scanned tags ('+tags.length+')';box.append(head);
-const order={red:0,yellow:1,green:2,black:3,white:4};
-tags.slice().sort((a,b)=>(order[a.colour]-order[b.colour])||a.t-b.t).forEach(t=>{
+syncCasFromTags._prev=Object.fromEntries(TRI.map(([k])=>[k,taggedCount(k)]));updateTagSum();if(!quiet)save()}
+function updateTagSum(){const el=$('tagsum');if(!el)return;if(!tags.length){el.hidden=true;el.textContent='';return}
+const parts=TRI.map(([k,l])=>{const n=taggedCount(k);return n?l+' '+n:''}).filter(Boolean);const u=unknownCount();if(u)parts.push('unknown colour '+u);
+el.textContent=tags.length+' unique tag'+(tags.length===1?'':'s')+' scanned'+(parts.length?' · '+parts.join(' · '):'');el.hidden=false}
+function tagBlock(){if(!tags.length)return'';const nd=tags.filter(t=>t.decon).length,u=unknownCount();
+const lines=['    TRIAGE TAGS: '+tags.length+' tagged'+(u?', '+u+' unknown colour':'')+(nd?', '+nd+" not decon'd":'')];
+COLS.forEach(([k,l])=>{const g=tags.filter(t=>t.colour===k);if(!g.length)return;const head=k==='unknown'?'UNKNOWN COLOUR':l.toUpperCase();
+lines.push('    '+head+': '+g.map(t=>{let s=t.id+' at '+fmtT(t.t);if(t.tColour&&t.tColour!==t.t)s+=' (retriage '+fmtT(t.tColour)+')';if(t.decon)s+=", not decon'd";return s}).join('; '))});return '\n'+lines.join('\n')}
+function drawTags(){const box=$('taglist');if(!box)return;box.innerHTML='';updateTagSum();if(!tags.length)return;
+const order={red:0,yellow:1,green:2,black:3,white:4,unknown:5};
+tags.slice().sort((a,b)=>(order[a.colour]??9)-(order[b.colour]??9)||a.t-b.t).forEach(t=>{
 const row=document.createElement('div');row.className='tagrow';
-const col=document.createElement('span');col.className='tagcol t_'+t.colour;col.textContent=(TRI.find(x=>x[0]===t.colour)||[t.colour,t.colour])[1];
-const mid=document.createElement('div');mid.style.flex='1';
+const col=document.createElement('span');col.className='tagcol t_'+(isColour(t.colour)?t.colour:'unknown');col.textContent=colourLabel(t.colour||'unknown');
+col.title='Set colour';col.style.cursor='pointer';col.onclick=()=>openTagPick(t.id);
+const mid=document.createElement('div');mid.style.flex='1';mid.style.cursor='pointer';mid.onclick=()=>openTagPick(t.id);
 const id=document.createElement('div');id.className='tagid';id.textContent=t.id;
 const meta=document.createElement('div');meta.className='tagmeta';
-let m='scanned '+fmtT(t.t);if(t.tColour&&t.tColour!==t.t)m+=' · retriage '+fmtT(t.tColour);if(t.decon)m+=" · not decon'd";
+let m='scanned '+fmtT(t.t);if(t.tColour&&t.tColour!==t.t)m+=' · retriage '+fmtT(t.tColour);if(t.decon)m+=" · not decon'd";if(t.colour==='unknown')m+=' · tap to set colour';
 meta.textContent=m;mid.append(id,meta);
-const ch=document.createElement('button');ch.type='button';ch.textContent='Edit';ch.setAttribute('aria-label','Edit tag '+t.id);ch.onclick=()=>openTagPick(t.id,false);
+const ch=document.createElement('button');ch.type='button';ch.textContent='Edit';ch.setAttribute('aria-label','Edit tag '+t.id);ch.onclick=()=>openTagPick(t.id);
 const del=document.createElement('button');del.type='button';del.textContent='✕';del.setAttribute('aria-label','Delete tag '+t.id);
 del.onclick=()=>{if(!confirm('Remove tag '+t.id+'?'))return;pushUndo();tags=tags.filter(x=>x!==t);drawTags();syncCasFromTags();renderChips()};
 row.append(col,mid,ch,del);box.append(row)})}
-function saveTag(id,colour,decon){pushUndo();const now=Date.now(),i=tags.findIndex(t=>t.id===id);
-if(i>=0){const t=tags[i];if(t.colour!==colour)t.tColour=now;t.colour=colour;t.decon=!!decon}else tags.push({id,colour,decon:!!decon,t:now,tColour:now});
-drawTags();syncCasFromTags();renderChips();toast('Saved '+id+' · '+(TRI.find(x=>x[0]===colour)||[,'?'])[1])}
-function openTagPick(id,resume){const existing=tags.find(t=>t.id===id),m=$('tagpick'),b=$('tagpickBox');b.innerHTML='';
-const h=document.createElement('h3');h.textContent=existing?('Tag '+id+' already scanned — update if needed'):('Tag '+id);b.append(h);
-let colour=existing?existing.colour:'',decon=existing?!!existing.decon:false;
+function addNewTag(id){if(findTag(id))return false;tags.push({id,colour:'unknown',decon:false,t:Date.now(),tColour:null});return true}
+function saveTag(id,colour,decon){pushUndo();const now=Date.now(),c=isColour(colour)?colour:'unknown';let t=findTag(id);
+if(t){if(t.colour!==c)t.tColour=now;t.colour=c;t.decon=!!decon}else t={id,colour:c,decon:!!decon,t:now,tColour:c==='unknown'?null:now},tags.push(t);
+drawTags();syncCasFromTags();renderChips();toast('Saved '+id+' · '+colourLabel(t.colour))}
+function openTagPick(id,onDone){const existing=findTag(id),m=$('tagpick'),b=$('tagpickBox');b.innerHTML='';
+const h=document.createElement('h3');h.textContent=existing?('Tag '+id+(existing.colour==='unknown'?' — set a colour':'')):'Tag '+id;b.append(h);
+let colour=existing?existing.colour:'unknown',decon=existing?!!existing.decon:false;
 const row=document.createElement('div');row.className='crow';const colBtns=[];
-TRI.forEach(([k,l])=>{const btn=document.createElement('button');btn.type='button';btn.className='t_'+k+(colour===k?' on':'');btn.textContent=l;
+COLS.forEach(([k,l])=>{const btn=document.createElement('button');btn.type='button';btn.className='t_'+k+(colour===k?' on':'');btn.textContent=l;
 btn.onclick=()=>{colour=k;colBtns.forEach(x=>x.classList.remove('on'));btn.classList.add('on')};colBtns.push(btn);row.append(btn)});
 b.append(row);
 const tog=document.createElement('button');tog.type='button';tog.className='decon'+(decon?' on':'');tog.textContent=decon?"☑ Not decon'd":"☐ Not decon'd";
 tog.onclick=()=>{decon=!decon;tog.classList.toggle('on',decon);tog.textContent=decon?"☑ Not decon'd":"☐ Not decon'd"};b.append(tog);
 const act=document.createElement('div');act.className='row';const sv=mkBtn('Save','p'),cn=mkBtn('Cancel');
-sv.onclick=()=>{if(!colour){toast('Pick a triage colour');return}saveTag(id,colour,decon);m.hidden=true;if(resume&&scanRun)resumeScan(id)};
-cn.onclick=()=>{m.hidden=true;if(resume&&scanRun)resumeScan(id)};
+const done=()=>{m.hidden=true;onDone&&onDone()};
+sv.onclick=()=>{saveTag(id,colour,decon);done()};
+cn.onclick=done;
 act.append(sv,cn);b.append(act);m.hidden=false}
 function promptTagId(resume){const m=$('tagpick'),b=$('tagpickBox');b.innerHTML='';
 b.append(el('h3',{textContent:'Type tag number'}));
 const inp=el('input',{value:'',placeholder:'e.g. 0394XM',autocomplete:'off',spellcheck:false});inp.setAttribute('autocapitalize','characters');inp.setAttribute('autocorrect','off');b.append(inp);
-const act=el('div',{className:'row'}),ok=mkBtn('Next','p'),cn=mkBtn('Cancel');
-const go=()=>{const id=normTag(inp.value);if(!id||id.length<3){toast('Enter the tag ID printed under the barcode');return}openTagPick(id,resume)};
+const act=el('div',{className:'row'}),ok=mkBtn('Add','p'),cn=mkBtn('Cancel');
+const finish=()=>{m.hidden=true;if(resume&&scanRun)resumeScan()};
+const go=()=>{const id=normTag(inp.value);if(!id||id.length<3){toast('Enter the tag ID printed under the barcode');return}
+if(findTag(id)){toast(id+' already scanned');if(resume){scanNote(id,'dup');finish();return}m.hidden=true;openTagPick(id);return}
+if(askColour){m.hidden=true;if(!findTag(id)){pushUndo();addNewTag(id);drawTags();syncCasFromTags();renderChips()}if(resume)scanNote(id,'new');openTagPick(id,()=>{if(resume&&scanRun)resumeScan()});return}
+pushUndo();addNewTag(id);drawTags();syncCasFromTags();renderChips();toast('Added '+id+' · unknown colour');if(resume)scanNote(id,'new');finish()};
 ok.onclick=go;inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go()}};
-cn.onclick=()=>{m.hidden=true;if(resume&&scanRun)resumeScan('')};
-act.append(ok,cn);b.append(act);m.hidden=false;setTimeout(()=>inp.focus(),80)}
+cn.onclick=finish;act.append(ok,cn);b.append(act);m.hidden=false;setTimeout(()=>inp.focus(),80)}
 function scanBeep(){try{const ac=new(window.AudioContext||window.webkitAudioContext)(),o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=880;g.gain.value=.08;o.connect(g);g.connect(ac.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.12);o.stop(ac.currentTime+.13);setTimeout(()=>ac.close(),300)}catch(e){}try{navigator.vibrate&&navigator.vibrate(80)}catch(e){}}
-let zxingP=null,scanStream=null,scanRun=false,scanPaused=false,scanEngine=null,scanIgnore='',scanIgnoreUntil=0,torchOn=false;
+let zxingP=null,scanStream=null,scanRun=false,scanPaused=false,scanEngine=null,torchOn=false,askColour=localStorage.methane_scan_ask==='1',scanDupNoted=new Set();
+function syncAskBtn(){const b=$('scanask');if(!b)return;b.textContent=askColour?'🎯 Ask colour':'⚡ Rapid scan';b.classList.toggle('on',!askColour);b.setAttribute('aria-pressed',String(!askColour))}
+function updateScanStat(){const b=$('scanstat');if(!b)return;const u=unknownCount();b.textContent=tags.length+' unique tag'+(tags.length===1?'':'s')+(u?(' · '+u+' unknown colour'):'')+(askColour?' · will ask colour':' · rapid scan')}
+function scanNote(id,kind){const box=$('scanfound');if(!box)return;if(kind==='dup'){if(scanDupNoted.has(id))return;scanDupNoted.add(id)}
+const row=document.createElement('div');row.className='scanitem '+(kind==='new'?'scannew':'scandup');row.textContent=(kind==='new'?'＋ ':'Already scanned: ')+id;box.insertBefore(row,box.firstChild);while(box.children.length>24)box.lastChild.remove();updateScanStat()}
 function loadZXing(){if(window.ZXing)return Promise.resolve(window.ZXing);if(zxingP)return zxingP;
 zxingP=new Promise((ok,no)=>{const s=document.createElement('script');s.src='vendor/zxing.min.js';s.onload=()=>window.ZXing?ok(window.ZXing):no(new Error('ZXing missing'));s.onerror=()=>no(new Error('ZXing failed to load'));document.head.appendChild(s)}).catch(e=>{zxingP=null;throw e});return zxingP}
 async function makeDetector(){if(typeof BarcodeDetector==='function'){try{const want=['code_128','code_39','code_93','codabar','ean_13','ean_8','upc_a','upc_e','itf'];let fm=want;if(typeof BarcodeDetector.getSupportedFormats==='function'){const sup=await BarcodeDetector.getSupportedFormats();fm=want.filter(f=>sup.includes(f))}if(fm.length)return{kind:'native',det:new BarcodeDetector({formats:fm})}}catch(e){}}
 const Z=await loadZXing();const hints=new Map();hints.set(Z.DecodeHintType.POSSIBLE_FORMATS,[Z.BarcodeFormat.CODE_128,Z.BarcodeFormat.CODE_39,Z.BarcodeFormat.CODE_93,Z.BarcodeFormat.CODABAR,Z.BarcodeFormat.ITF,Z.BarcodeFormat.EAN_13,Z.BarcodeFormat.EAN_8,Z.BarcodeFormat.UPC_A,Z.BarcodeFormat.UPC_E]);hints.set(Z.DecodeHintType.TRY_HARDER,true);const reader=new Z.MultiFormatReader();reader.setHints(hints);return{kind:'zxing',Z,reader}}
-async function detectFrame(engine,video){if(engine.kind==='native'){try{const codes=await engine.det.detect(video);if(codes&&codes.length&&codes[0].rawValue)return codes[0].rawValue}catch(e){}return null}
-const w=video.videoWidth,h=video.videoHeight;if(!w)return null;const c=detectFrame.canvas||(detectFrame.canvas=document.createElement('canvas'));
-const band=Math.max(90,Math.round(h*.4));c.width=w;c.height=band;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(video,0,(h-band)/2,w,band,0,0,w,band);
-try{const src=new engine.Z.HTMLCanvasElementLuminanceSource(c),bmp=new engine.Z.BinaryBitmap(new engine.Z.HybridBinarizer(src)),r=engine.reader.decode(bmp);try{engine.reader.reset()}catch(e){}return r?r.getText():null}catch(e){try{engine.reader.reset()}catch(x){}
-if(!detectFrame.full){detectFrame.full=true;c.height=h;ctx.drawImage(video,0,0,w,h,0,0,w,h);try{const src=new engine.Z.HTMLCanvasElementLuminanceSource(c),bmp=new engine.Z.BinaryBitmap(new engine.Z.HybridBinarizer(src)),r=engine.reader.decode(bmp);try{engine.reader.reset()}catch(e){}return r?r.getText():null}catch(e2){try{engine.reader.reset()}catch(x){}}}else detectFrame.full=false;return null}}
+function zxingOnce(engine,canvas){try{const src=new engine.Z.HTMLCanvasElementLuminanceSource(canvas),bmp=new engine.Z.BinaryBitmap(new engine.Z.HybridBinarizer(src)),r=engine.reader.decode(bmp);try{engine.reader.reset()}catch(e){}return r||null}catch(e){try{engine.reader.reset()}catch(x){}return null}}
+function zxingBlackout(ctx,result){const pts=result.getResultPoints&&result.getResultPoints();if(!pts||!pts.length)return false;let minX=1e9,minY=1e9,maxX=0,maxY=0;for(const p of pts){const x=p.getX(),y=p.getY();if(x<minX)minX=x;if(y<minY)minY=y;if(x>maxX)maxX=x;if(y>maxY)maxY=y}const pad=18;ctx.fillStyle='#fff';ctx.fillRect(minX-pad,minY-pad*2,(maxX-minX)+pad*2,(maxY-minY)+pad*4);return true}
+function zxingDecodeMultiple(engine,video){const w=video.videoWidth,h=video.videoHeight;if(!w)return[];const c=zxingDecodeMultiple.canvas||(zxingDecodeMultiple.canvas=document.createElement('canvas')),ctx=c.getContext('2d',{willReadFrequently:true}),found=[];
+const harvest=()=>{for(let i=0;i<8;i++){const r=zxingOnce(engine,c);if(!r)break;const t=r.getText();if(t&&!found.includes(t))found.push(t);if(!zxingBlackout(ctx,r))break}};
+c.width=w;c.height=h;ctx.drawImage(video,0,0);harvest();
+if(found.length<2){const band=Math.max(110,Math.round(h/3)),step=Math.round(band*.7);for(let y=0;y<h;y+=step){const bh=Math.min(band,h-y);c.width=w;c.height=bh;ctx.drawImage(video,0,y,w,bh,0,0,w,bh);harvest()}}
+return found}
+async function detectFrame(engine,video){if(engine.kind==='native'){try{const codes=await engine.det.detect(video);return(codes||[]).map(c=>c.rawValue).filter(Boolean)}catch(e){return[]}}return zxingDecodeMultiple(engine,video)}
+function handleDetected(raws){const ids=[...new Set((raws||[]).map(normTag).filter(Boolean))];if(!ids.length)return;
+const news=ids.filter(id=>!findTag(id)),dups=ids.filter(id=>!!findTag(id));
+dups.forEach(id=>scanNote(id,'dup'));
+if(!news.length)return;
+if(askColour){scanPaused=true;let i=0;const next=()=>{if(i>=news.length){resumeScan();return}const id=news[i++];if(findTag(id)){scanNote(id,'dup');return next()}
+scanBeep();pushUndo();addNewTag(id);drawTags();syncCasFromTags();renderChips();scanNote(id,'new');openTagPick(id,next)};next();return}
+pushUndo();let added=0;news.forEach(id=>{if(addNewTag(id)){added++;scanBeep();scanNote(id,'new')}});
+if(added){drawTags();syncCasFromTags();renderChips();updateScanStat()}}
 async function scanLoop(){if(!scanRun||$('scanov').hidden)return;const v=$('scanvid');
-if(!scanPaused&&scanEngine&&v.readyState>=2){const raw=await detectFrame(scanEngine,v),id=normTag(raw);
-if(id&&!(id===scanIgnore&&Date.now()<scanIgnoreUntil)){scanPaused=true;scanBeep();$('scanstat').textContent='Tag '+id;openTagPick(id,true);return}}
-setTimeout(scanLoop,scanEngine&&scanEngine.kind==='zxing'?130:80)}
-function resumeScan(lastId){scanIgnore=lastId||'';scanIgnoreUntil=Date.now()+1500;scanPaused=false;$('scanstat').textContent='Point at the barcode on the tag';if(scanRun&&!$('scanov').hidden)scanLoop()}
+if(!scanPaused&&scanEngine&&v.readyState>=2){try{handleDetected(await detectFrame(scanEngine,v))}catch(e){}}
+setTimeout(scanLoop,scanEngine&&scanEngine.kind==='zxing'?150:90)}
+function resumeScan(){scanPaused=false;updateScanStat()}
 function closeScanner(){scanRun=false;scanPaused=true;scanEngine=null;if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null}const v=$('scanvid');try{v.pause()}catch(e){}v.srcObject=null;$('scanov').hidden=true;$('scanflash').classList.remove('on');$('scanflash').hidden=true;torchOn=false;$('tagpick').hidden=true}
-async function openScanner(){$('scanov').hidden=false;$('scanstat').textContent='Starting camera…';$('scanflash').hidden=true;torchOn=false;scanPaused=false;scanRun=false;
+async function openScanner(){$('scanov').hidden=false;$('scanstat').textContent='Starting camera…';$('scanflash').hidden=true;torchOn=false;scanPaused=false;scanRun=false;scanDupNoted=new Set();if($('scanfound'))$('scanfound').innerHTML='';syncAskBtn();
 try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){const err=new Error('No camera API');err.name='NotFoundError';throw err}
 scanStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});
 const v=$('scanvid');v.srcObject=scanStream;await v.play();
 const track=scanStream.getVideoTracks()[0],caps=(track.getCapabilities&&track.getCapabilities())||{};$('scanflash').hidden=!caps.torch;
 try{scanEngine=await makeDetector()}catch(e){$('scanstat').textContent='Scanner unavailable — type the tag number instead.';return}
-$('scanstat').textContent='Point at the barcode on the tag';scanRun=true;scanLoop()}
+updateScanStat();scanRun=true;scanLoop()}
 catch(e){const denied=e&&(e.name==='NotAllowedError'||e.name==='PermissionDeniedError');const miss=e&&(e.name==='NotFoundError'||e.name==='DevicesNotFoundError'||e.name==='OverconstrainedError');
 $('scanstat').textContent=denied?'Camera permission denied. You can type the tag number instead.':miss?'No camera found. You can type the tag number instead.':('Camera error: '+(e&&(e.message||e.name)||'unknown')+'. You can type the tag number instead.')}}
 $('scanflash').onclick=async()=>{if(!scanStream)return;const track=scanStream.getVideoTracks()[0];try{torchOn=!torchOn;await track.applyConstraints({advanced:[{torch:torchOn}]});$('scanflash').classList.toggle('on',torchOn)}catch(e){torchOn=false;$('scanflash').hidden=true}};
+$('scanask').onclick=()=>{askColour=!askColour;localStorage.methane_scan_ask=askColour?'1':'0';syncAskBtn();updateScanStat()};
 $('scanmanual').onclick=()=>{scanPaused=true;promptTagId(true)};
 $('scanclose').onclick=closeScanner;
 $('scantag').onclick=openScanner;
 $('typetag').onclick=()=>promptTagId(false);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&scanRun)closeScanner()});
 TRI.forEach(([k])=>$(k).addEventListener('change',()=>{const n=taggedCount(k);if((+$(k).value||0)<n)$(k).value=n;save()}));
-if(draftTags){tags=draftTags.filter(t=>t&&typeof t==='object'&&t.id&&TRI.some(x=>x[0]===t.colour)).map(t=>({id:normTag(t.id)||String(t.id).toUpperCase(),colour:t.colour,decon:!!t.decon,t:+t.t||Date.now(),tColour:+t.tColour||+t.t||Date.now()}))}
-drawTags();syncCasFromTags();
+if(draftTags){const seen=new Set();tags=draftTags.filter(t=>t&&typeof t==='object'&&t.id).map(t=>{const id=normTag(t.id)||String(t.id).toUpperCase().trim();const colour=isColour(t.colour)?t.colour:'unknown';return{id,colour,decon:!!t.decon,t:+t.t||Date.now(),tColour:t.tColour?+t.tColour:null}}).filter(t=>t.id&&!seen.has(t.id)&&(seen.add(t.id),true))}
+drawTags();syncCasFromTags();syncAskBtn();
 
 // ---------- settings UI ----------
 let draftSet=null;
@@ -435,7 +466,7 @@ function openSettings(){draftSet=clone(SET);renderSettings();$('settings').hidde
 function closeSettings(){$('settings').hidden=true}
 $('gear').onclick=openSettings;
 renderChips();if(location.hash=='#settings')openSettings();else if(location.hash=='#guided')setTimeout(()=>$('guided').click(),300);
-const APPV='v17',FB='https://signal.group/#CjQKIFLsCHEn62HKd1--KiGSXDdz94M8Z9DSjlp5xroEIL6gEhCn0m5ijXSByL6rE2War5RU';
+const APPV='v18',FB='https://signal.group/#CjQKIFLsCHEn62HKd1--KiGSXDdz94M8Z9DSjlp5xroEIL6gEhCn0m5ijXSByL6rE2War5RU';
 function fbBlock(){const w=document.createElement('div');w.style.cssText='margin:20px 0 8px;text-align:center';const a=document.createElement('a');a.href=FB;a.target='_blank';a.rel='noopener';a.textContent='💬 Feedback / Report a bug';a.style.cssText='display:block;padding:16px;border:2px solid #ffd600;border-radius:12px;background:#222;color:#ffd600;font-weight:800;text-decoration:none;font-size:19px';const h=document.createElement('div');h.className='hint';h.textContent='Opens the EPSO pilot Signal group';w.append(a,h);return w}
 document.body.appendChild(fbBlock());
 (function(){const t=document.createElement('div');t.id='ver';t.textContent='METHANE Sitrep '+APPV;t.style.cssText='text-align:center;color:#777;font-size:13px;margin:16px 0';document.body.appendChild(t);
