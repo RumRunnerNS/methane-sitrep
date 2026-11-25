@@ -22,7 +22,7 @@ textarea,input,select{width:100%;background:#111;color:#fff;border:2px solid #66
 .cas small.tc{display:block;font-size:11px;font-weight:700;line-height:1.2;min-height:14px;opacity:.95}
 .t_red{background:#d50000}.t_yellow{background:#ffd600;color:#000}.t_green{background:#00a843}.t_black{background:#000;border:2px solid #fff}.t_white{background:#fff;color:#000}.t_unknown{background:#5a5a5a;color:#fff;border:2px solid #9e9e9e}.cas .t_yellow input,.cas .t_white input{background:#fff;color:#000;border-color:#000}
 #taglist{margin-top:8px}#tagsum{margin-top:8px;color:#ffd600;font-weight:800}#tagsum[hidden]{display:none!important}.tagrow{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #444}.tagid{font-weight:800;font-size:18px;letter-spacing:.06em}.tagmeta{color:#bbb;font-size:14px}.tagcol{display:inline-block;padding:6px 8px;border-radius:8px;font-weight:800;min-width:72px;text-align:center;flex:none}.tagrow button{flex:none;min-height:44px;padding:8px 10px}.tagrow button:last-child{width:48px;padding:0}
-#scanov{position:fixed;inset:0;background:#000;z-index:60;display:flex;flex-direction:column}#scanov[hidden]{display:none!important}#scanstage{position:relative;flex:1;min-height:0}#scanvid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}#scanframe{position:absolute;left:6%;right:6%;top:16%;height:50%;border:3px solid #ffd600;border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.35);pointer-events:none}#scanbar{position:relative;padding:10px 10px calc(12px + env(safe-area-inset-bottom));background:#111}#scanstat{font-weight:800;margin:0 0 8px;text-align:center}#scanfound{max-height:22vh;overflow:auto;margin:0 0 8px;font-size:15px}.scanitem{padding:4px 0;border-bottom:1px solid #333}.scannew{color:#ffd600;font-weight:800}.scandup{color:#bbb}
+#scanov{position:fixed;inset:0;background:#000;z-index:60;display:flex;flex-direction:column}#scanov[hidden]{display:none!important}#scanstage{position:relative;flex:1;min-height:0}#scanvid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}#scanframe{position:absolute;left:6%;right:6%;top:16%;height:50%;border:3px solid #ffd600;border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.35);pointer-events:none}#scanbar{position:relative;padding:10px 10px calc(12px + env(safe-area-inset-bottom));background:#111}#scanstat{font-weight:800;margin:0 0 8px;text-align:center}#scandiag{color:#888;font-size:12px;font-weight:400;text-align:center;margin:0 0 6px;word-break:break-word}#scanfound{max-height:22vh;overflow:auto;margin:0 0 8px;font-size:15px}.scanitem{padding:4px 0;border-bottom:1px solid #333}.scannew{color:#ffd600;font-weight:800}.scandup{color:#bbb}
 #tagpick{z-index:70}#tagpick .crow{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}#tagpick .crow button{min-height:56px;padding:6px 4px;font-size:15px}#tagpick .decon{width:100%;margin:8px 0}
 #live{min-height:40px;background:#111;border:1px dashed #666;padding:8px;border-radius:10px;color:#ffd600}
 pre{white-space:pre-wrap;background:#111;border:2px solid #fff;padding:10px;border-radius:10px;font-size:17px}
@@ -68,6 +68,7 @@ pre{white-space:pre-wrap;background:#111;border:2px solid #fff;padding:10px;bord
 <div id="scanov" hidden>
 <div id="scanstage"><video id="scanvid" playsinline muted autoplay></video><div id="scanframe" aria-hidden="true"></div></div>
 <div id="scanbar"><div id="scanstat">Point the camera at the barcodes on the tag</div>
+<div id="scandiag"></div>
 <div id="scanfound" aria-live="polite"></div>
 <div class="row"><button type="button" id="scanflash" hidden>🔦 Torch</button><button type="button" id="scanask">⚡ Rapid scan</button><button type="button" id="scanmanual">⌨️ Type tag number</button><button type="button" id="scanclose">Close</button></div></div>
 </div>
@@ -382,16 +383,36 @@ function scanNote(id,kind){const box=$('scanfound');if(!box)return;if(kind==='du
 const row=document.createElement('div');row.className='scanitem '+(kind==='new'?'scannew':'scandup');row.textContent=(kind==='new'?'＋ ':'Already scanned: ')+id;box.insertBefore(row,box.firstChild);while(box.children.length>24)box.lastChild.remove();updateScanStat()}
 function loadZXing(){if(window.ZXing)return Promise.resolve(window.ZXing);if(zxingP)return zxingP;
 zxingP=new Promise((ok,no)=>{const s=document.createElement('script');s.src='vendor/zxing.min.js';s.onload=()=>window.ZXing?ok(window.ZXing):no(new Error('ZXing missing'));s.onerror=()=>no(new Error('ZXing failed to load'));document.head.appendChild(s)}).catch(e=>{zxingP=null;throw e});return zxingP}
-async function makeDetector(){if(typeof BarcodeDetector==='function'){try{const want=['code_128','code_39','code_93','codabar','ean_13','ean_8','upc_a','upc_e','itf'];let fm=want;if(typeof BarcodeDetector.getSupportedFormats==='function'){const sup=await BarcodeDetector.getSupportedFormats();fm=want.filter(f=>sup.includes(f))}if(fm.length)return{kind:'native',det:new BarcodeDetector({formats:fm})}}catch(e){}}
-const Z=await loadZXing();const hints=new Map();hints.set(Z.DecodeHintType.POSSIBLE_FORMATS,[Z.BarcodeFormat.CODE_128,Z.BarcodeFormat.CODE_39,Z.BarcodeFormat.CODE_93,Z.BarcodeFormat.CODABAR,Z.BarcodeFormat.ITF,Z.BarcodeFormat.EAN_13,Z.BarcodeFormat.EAN_8,Z.BarcodeFormat.UPC_A,Z.BarcodeFormat.UPC_E]);hints.set(Z.DecodeHintType.TRY_HARDER,true);const reader=new Z.MultiFormatReader();reader.setHints(hints);return{kind:'zxing',Z,reader}}
+const scanDiag={engine:'—',w:0,h:0,frames:0,lastErr:'',lastHit:''};
+function setDiag(){const el=$('scandiag');if(!el)return;const d=scanDiag;el.textContent='engine: '+d.engine+' · '+(d.w&&d.h?d.w+'×'+d.h:'no video')+' · frames: '+d.frames+(d.lastHit?' · last: '+d.lastHit:'')+(d.lastErr?' · err: '+d.lastErr:'')}
+function withTimeout(p,ms,label){let t;return Promise.race([p,new Promise((_,no)=>{t=setTimeout(()=>no(new Error(label+' timeout '+ms+'ms')),ms)})]).finally(()=>clearTimeout(t))}
+async function makeDetector(){let det=null,fm=[];scanDiag.lastErr='';
+if(typeof BarcodeDetector==='function'){try{const want=['code_128','code_39','code_93','codabar','ean_13','ean_8','upc_a','upc_e','itf'];let supported=want;
+if(typeof BarcodeDetector.getSupportedFormats==='function'){const sup=await BarcodeDetector.getSupportedFormats();const lower=[...sup].map(f=>String(f).toLowerCase());supported=want.filter(f=>lower.includes(f))}
+if(supported.includes('code_128')){det=new BarcodeDetector({formats:supported});fm=supported}else scanDiag.lastErr='native has no code_128 ('+(supported.join(',')||'none')+')'}catch(e){scanDiag.lastErr='native '+((e&&(e.message||e.name))||e)}}
+let Z=null,reader=null;
+try{Z=await loadZXing();const hints=new Map();hints.set(Z.DecodeHintType.POSSIBLE_FORMATS,[Z.BarcodeFormat.CODE_128,Z.BarcodeFormat.CODE_39,Z.BarcodeFormat.CODE_93,Z.BarcodeFormat.CODABAR,Z.BarcodeFormat.ITF,Z.BarcodeFormat.EAN_13,Z.BarcodeFormat.EAN_8,Z.BarcodeFormat.UPC_A,Z.BarcodeFormat.UPC_E]);hints.set(Z.DecodeHintType.TRY_HARDER,true);reader=new Z.MultiFormatReader();reader.setHints(hints)}catch(e){scanDiag.lastErr=(scanDiag.lastErr?scanDiag.lastErr+'; ':'')+'zxing '+((e&&(e.message||e.name))||e)}
+if(!det&&!reader)throw new Error(scanDiag.lastErr||'No scanner engine');
+const kind=det&&reader?'native+zxing':det?'native':'zxing';scanDiag.engine=kind+(fm.length?' ['+fm.join(',')+']':'');return{kind,det,Z,reader}}
+function grabCanvas(video,y0,h){const w=video.videoWidth,vh=video.videoHeight;if(!w)return null;const c=document.createElement('canvas');const ch=h||vh,sy=y0||0;c.width=w;c.height=ch;c.getContext('2d',{willReadFrequently:true}).drawImage(video,0,sy,w,ch,0,0,w,ch);return c}
 function zxingOnce(engine,canvas){try{const src=new engine.Z.HTMLCanvasElementLuminanceSource(canvas),bmp=new engine.Z.BinaryBitmap(new engine.Z.HybridBinarizer(src)),r=engine.reader.decode(bmp);try{engine.reader.reset()}catch(e){}return r||null}catch(e){try{engine.reader.reset()}catch(x){}return null}}
-function zxingBlackout(ctx,result){const pts=result.getResultPoints&&result.getResultPoints();if(!pts||!pts.length)return false;let minX=1e9,minY=1e9,maxX=0,maxY=0;for(const p of pts){const x=p.getX(),y=p.getY();if(x<minX)minX=x;if(y<minY)minY=y;if(x>maxX)maxX=x;if(y>maxY)maxY=y}const pad=18;ctx.fillStyle='#fff';ctx.fillRect(minX-pad,minY-pad*2,(maxX-minX)+pad*2,(maxY-minY)+pad*4);return true}
-function zxingDecodeMultiple(engine,video){const w=video.videoWidth,h=video.videoHeight;if(!w)return[];const c=zxingDecodeMultiple.canvas||(zxingDecodeMultiple.canvas=document.createElement('canvas')),ctx=c.getContext('2d',{willReadFrequently:true}),found=[];
-const harvest=()=>{for(let i=0;i<8;i++){const r=zxingOnce(engine,c);if(!r)break;const t=r.getText();if(t&&!found.includes(t))found.push(t);if(!zxingBlackout(ctx,r))break}};
-c.width=w;c.height=h;ctx.drawImage(video,0,0);harvest();
-if(found.length<2){const band=Math.max(110,Math.round(h/3)),step=Math.round(band*.7);for(let y=0;y<h;y+=step){const bh=Math.min(band,h-y);c.width=w;c.height=bh;ctx.drawImage(video,0,y,w,bh,0,0,w,bh);harvest()}}
+function zxingBlackout(ctx,result,h){const pts=result.getResultPoints&&result.getResultPoints();if(!pts||!pts.length)return false;let minX=1e9,maxX=0;for(const p of pts){const x=p.getX();if(x<minX)minX=x;if(x>maxX)maxX=x}const pad=20;ctx.fillStyle='#fff';ctx.fillRect(minX-pad,0,(maxX-minX)+pad*2,h);return true}
+function zxingDecodeCanvas(engine,canvas,found){const ctx=canvas.getContext('2d',{willReadFrequently:true});for(let i=0;i<6;i++){const r=zxingOnce(engine,canvas);if(!r)break;const t=r.getText();if(t&&!found.includes(t))found.push(t);if(!zxingBlackout(ctx,r,canvas.height))break}}
+function zxingDecodeMultiple(engine,video){const w=video.videoWidth,h=video.videoHeight;if(!w)return[];const found=[];
+const full=grabCanvas(video,0,h);if(full)zxingDecodeCanvas(engine,full,found);
+const band=Math.max(120,Math.round(h*0.4)),step=Math.max(80,Math.round(band*0.55));
+for(let y=0;y<h;y+=step){const bh=Math.min(band,h-y);const c=grabCanvas(video,y,bh);if(c)zxingDecodeCanvas(engine,c,found)}
 return found}
-async function detectFrame(engine,video){if(engine.kind==='native'){try{const codes=await engine.det.detect(video);return(codes||[]).map(c=>c.rawValue).filter(Boolean)}catch(e){return[]}}return zxingDecodeMultiple(engine,video)}
+async function nativeDetect(det,video){const c=grabCanvas(video,0,video.videoHeight);if(!c)return[];
+let src=c;
+try{if(typeof createImageBitmap==='function')src=await withTimeout(createImageBitmap(c),400,'bitmap')}catch(e){src=c}
+try{const codes=await withTimeout(det.detect(src),500,'detect');try{src.close&&src.close()}catch(e){}return(codes||[]).map(x=>x.rawValue).filter(Boolean)}
+catch(e){try{src.close&&src.close()}catch(x){} throw e}}
+async function detectFrame(engine,video){const found=[];const add=v=>{if(v&&!found.includes(v))found.push(v)};const w=video.videoWidth;if(!w){scanDiag.lastErr='video 0×0';return found}scanDiag.w=w;scanDiag.h=video.videoHeight;
+if(engine.det){try{(await nativeDetect(engine.det,video)).forEach(add);if(found.length)scanDiag.lastErr=''}catch(e){scanDiag.lastErr='native '+(e&&(e.message||e.name)||e)}}
+if(engine.reader&&(!found.length||found.length<2)){try{zxingDecodeMultiple(engine,video).forEach(add);if(found.length){if(/native /.test(scanDiag.lastErr))scanDiag.lastErr=''}}catch(e){scanDiag.lastErr=(scanDiag.lastErr?scanDiag.lastErr+'; ':'')+'zxing '+(e&&(e.message||e.name)||e)}}
+if(found.length)scanDiag.lastHit=found.join(', ');
+return found}
 function handleDetected(raws){const ids=[...new Set((raws||[]).map(normTag).filter(Boolean))];if(!ids.length)return;
 const news=ids.filter(id=>!findTag(id)),dups=ids.filter(id=>!!findTag(id));
 dups.forEach(id=>scanNote(id,'dup'));
@@ -401,19 +422,24 @@ scanBeep();pushUndo();addNewTag(id);drawTags();syncCasFromTags();renderChips();s
 pushUndo();let added=0;news.forEach(id=>{if(addNewTag(id)){added++;scanBeep();scanNote(id,'new')}});
 if(added){drawTags();syncCasFromTags();renderChips();updateScanStat()}}
 async function scanLoop(){if(!scanRun||$('scanov').hidden)return;const v=$('scanvid');
-if(!scanPaused&&scanEngine&&v.readyState>=2){try{handleDetected(await detectFrame(scanEngine,v))}catch(e){}}
-setTimeout(scanLoop,scanEngine&&scanEngine.kind==='zxing'?150:90)}
-function resumeScan(){scanPaused=false;updateScanStat()}
+try{if(!scanPaused&&scanEngine){if(v.videoWidth){scanDiag.frames++;const raws=await withTimeout(detectFrame(scanEngine,v),900,'frame');handleDetected(raws);if(scanDiag.frames<=3||scanDiag.frames%8===0||scanDiag.lastErr)setDiag()}else{scanDiag.lastErr='waiting for video';setDiag()}}}
+catch(e){scanDiag.lastErr=String((e&&(e.message||e.name))||e).slice(0,80);setDiag()}
+if(scanRun&&!$('scanov').hidden)setTimeout(scanLoop,scanEngine&&scanEngine.reader&&!scanEngine.det?140:80)}
+function resumeScan(){scanPaused=false;updateScanStat();setDiag()}
 function closeScanner(){scanRun=false;scanPaused=true;scanEngine=null;if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null}const v=$('scanvid');try{v.pause()}catch(e){}v.srcObject=null;$('scanov').hidden=true;$('scanflash').classList.remove('on');$('scanflash').hidden=true;torchOn=false;$('tagpick').hidden=true}
-async function openScanner(){$('scanov').hidden=false;$('scanstat').textContent='Starting camera…';$('scanflash').hidden=true;torchOn=false;scanPaused=false;scanRun=false;scanDupNoted=new Set();if($('scanfound'))$('scanfound').innerHTML='';syncAskBtn();
+async function openScanner(){$('scanov').hidden=false;$('scanstat').textContent='Starting camera…';$('scanflash').hidden=true;torchOn=false;scanPaused=false;scanRun=false;scanDupNoted=new Set();scanDiag.frames=0;scanDiag.lastErr='';scanDiag.lastHit='';scanDiag.w=0;scanDiag.h=0;scanDiag.engine='starting';setDiag();if($('scanfound'))$('scanfound').innerHTML='';syncAskBtn();
 try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){const err=new Error('No camera API');err.name='NotFoundError';throw err}
-scanStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});
-const v=$('scanvid');v.srcObject=scanStream;await v.play();
-const track=scanStream.getVideoTracks()[0],caps=(track.getCapabilities&&track.getCapabilities())||{};$('scanflash').hidden=!caps.torch;
-try{scanEngine=await makeDetector()}catch(e){$('scanstat').textContent='Scanner unavailable — type the tag number instead.';return}
-updateScanStat();scanRun=true;scanLoop()}
+scanStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}});
+const v=$('scanvid');v.setAttribute('playsinline','');v.setAttribute('muted','');v.muted=true;v.playsInline=true;v.srcObject=scanStream;
+try{await v.play()}catch(e){scanDiag.lastErr='play '+(e.message||e.name||e);setDiag()}
+const t0=Date.now();while(!v.videoWidth&&Date.now()-t0<2000)await new Promise(r=>setTimeout(r,50));
+scanDiag.w=v.videoWidth||0;scanDiag.h=v.videoHeight||0;
+const track=scanStream.getVideoTracks()[0];
+try{const caps=(track.getCapabilities&&track.getCapabilities())||{};$('scanflash').hidden=!caps.torch;const adv={};if(caps.focusMode&&(caps.focusMode.includes('continuous')||caps.focusMode.includes('continuous-video')))adv.focusMode=caps.focusMode.includes('continuous')?'continuous':'continuous-video';if(Object.keys(adv).length)await track.applyConstraints({advanced:[adv]})}catch(e){}
+try{$('scanstat').textContent='Loading scanner…';scanEngine=await makeDetector()}catch(e){$('scanstat').textContent='Scanner unavailable — type the tag number instead.';scanDiag.lastErr=String((e&&(e.message||e.name))||e);setDiag();return}
+updateScanStat();setDiag();scanRun=true;scanLoop()}
 catch(e){const denied=e&&(e.name==='NotAllowedError'||e.name==='PermissionDeniedError');const miss=e&&(e.name==='NotFoundError'||e.name==='DevicesNotFoundError'||e.name==='OverconstrainedError');
-$('scanstat').textContent=denied?'Camera permission denied. You can type the tag number instead.':miss?'No camera found. You can type the tag number instead.':('Camera error: '+(e&&(e.message||e.name)||'unknown')+'. You can type the tag number instead.')}}
+$('scanstat').textContent=denied?'Camera permission denied. You can type the tag number instead.':miss?'No camera found. You can type the tag number instead.':('Camera error: '+(e&&(e.message||e.name)||'unknown')+'. You can type the tag number instead.');scanDiag.lastErr=String((e&&(e.message||e.name))||e);setDiag()}}
 $('scanflash').onclick=async()=>{if(!scanStream)return;const track=scanStream.getVideoTracks()[0];try{torchOn=!torchOn;await track.applyConstraints({advanced:[{torch:torchOn}]});$('scanflash').classList.toggle('on',torchOn)}catch(e){torchOn=false;$('scanflash').hidden=true}};
 $('scanask').onclick=()=>{askColour=!askColour;localStorage.methane_scan_ask=askColour?'1':'0';syncAskBtn();updateScanStat()};
 $('scanmanual').onclick=()=>{scanPaused=true;promptTagId(true)};
@@ -466,7 +492,7 @@ function openSettings(){draftSet=clone(SET);renderSettings();$('settings').hidde
 function closeSettings(){$('settings').hidden=true}
 $('gear').onclick=openSettings;
 renderChips();if(location.hash=='#settings')openSettings();else if(location.hash=='#guided')setTimeout(()=>$('guided').click(),300);
-const APPV='v18',FB='https://signal.group/#CjQKIFLsCHEn62HKd1--KiGSXDdz94M8Z9DSjlp5xroEIL6gEhCn0m5ijXSByL6rE2War5RU';
+const APPV='v19',FB='https://signal.group/#CjQKIFLsCHEn62HKd1--KiGSXDdz94M8Z9DSjlp5xroEIL6gEhCn0m5ijXSByL6rE2War5RU';
 function fbBlock(){const w=document.createElement('div');w.style.cssText='margin:20px 0 8px;text-align:center';const a=document.createElement('a');a.href=FB;a.target='_blank';a.rel='noopener';a.textContent='💬 Feedback / Report a bug';a.style.cssText='display:block;padding:16px;border:2px solid #ffd600;border-radius:12px;background:#222;color:#ffd600;font-weight:800;text-decoration:none;font-size:19px';const h=document.createElement('div');h.className='hint';h.textContent='Opens the EPSO pilot Signal group';w.append(a,h);return w}
 document.body.appendChild(fbBlock());
 (function(){const t=document.createElement('div');t.id='ver';t.textContent='METHANE Sitrep '+APPV;t.style.cssText='text-align:center;color:#777;font-size:13px;margin:16px 0';document.body.appendChild(t);
